@@ -230,6 +230,80 @@ static void sumbytes(SymbolTable * global){
     }
 }
 
+static int searchSymbol(SymbolTable *table, char *name){
+    int i;
+    for (i = 0; i < table->size; i++){
+        if (strcmp(table->symbols[i].name, name) == 0){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+static int nbParamFuncAsso(SymbolTable *table , Node *node){
+    SymbolTable * temp = NULL;
+    for(int i = 0 ; i < table->size ; i++){
+        if(strcmp(table->symbols[i].name,node->name) == 0){
+            temp =(SymbolTable *)(table->symbols[i].table);
+            return temp->nparam;
+        }
+    }
+    return 0 ;
+}
+
+static Types searchSymbolInTable(SymbolTable *table, Node *node ){
+    for (int i = 0; i < table->size; i++){
+        if (strcmp(table->symbols[i].name, node->name) == 0){
+            return table->symbols[i].type;
+        }
+    }
+    return UNDEFINED;
+}
+
+static int sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbParam){
+    Node * child ;
+    Types type = UNDEFINED;
+    int i = 0 ;
+   for (child = node->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
+        type = searchSymbolInTable(table, child);
+        if (type != UNDEFINED){
+            if(table->symbols[i].type != type){
+                fprintf(stderr,ERR_TYPE_MISMATCH,
+                    child->lineno,StringFromTypes[type],
+                    StringFromTypes[table->symbols[i].type]);
+            }
+        }
+    }
+    return 1;
+}
+
+static int variableInBody(SymbolTable *global, SymbolTable *local, Node *node){
+    for (Node *child = node->firstChild; child != NULL; child = child->nextSibling){
+        if(child->label == Ident){
+            if(searchSymbol(local, child->name) == 0){
+                if(searchSymbol(global, child->name) == 0){
+                   printErr(child->name, child->lineno, ERR_UNDECLARED);
+                }
+            } 
+            if(FIRSTCHILD(child) && FIRSTCHILD(child)->label == Arguments){
+                sameTypeParameter(local, FIRSTCHILD(child), nbParamFuncAsso(global, child));       
+            }
+        }
+        variableInBody(global, local, child);
+    }
+    return 1 ;
+}
+
+
+void checkVariableDeclaration(SymbolTable *global , Node *node){
+    for (int i = 0; i < global->size; i++){
+        if(global->symbols[i].table != NULL){
+            variableInBody(global, global->symbols[i].table, global->symbols[i].funcNode);
+        }
+    }   
+}
+
 int buildSymTables(SymbolTable **dest, Node *root){
     // Initialize symbol table array
     SymbolTable *res = NULL;
@@ -249,79 +323,3 @@ int buildSymTables(SymbolTable **dest, Node *root){
 }
 
 
-static int searchSymbol(SymbolTable *table, char *name){
-    int i;
-    for (i = 0; i < table->size; i++){
-        if (strcmp(table->symbols[i].name, name) == 0){
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-static int nbParamFuncAsso(SymbolTable * table , Node * node){
-    SymbolTable * temp = NULL;
-    for(int i = 0 ; i < table->size ; i++){
-        if(strcmp(table->symbols[i].name,node->name) == 0){
-            temp =(SymbolTable *)(table->symbols[i].table);
-            return temp->nparam;
-        }
-    }
-    return 0 ;
-}
-
-static Types searchSymbolInTable(SymbolTable * table , Node * node ){
-    for (int i = 0; i < table->size; i++){
-        if (strcmp(table->symbols[i].name, node->name) == 0){
-            return table->symbols[i].type;
-        }
-    }
-    return UNDEFINED;
-}
-
-static int sameTypeParameter(SymbolTable * table , Node * node , unsigned int nbParam){
-    Node * child ;
-    Types type = UNDEFINED;
-    int i = 0 ;
-   for (child = node->firstChild; child != NULL && i < nbParam ; child = child->nextSibling , i++){
-        type = searchSymbolInTable(table, child);
-        if (type != UNDEFINED){
-            if(table->symbols[i].type != type){
-                
-                fprintf(stderr,ERR_TYPE_MISMATCH,
-                    child->lineno,StringFromTypes[type],
-                    StringFromTypes[table->symbols[i].type]);
-            }
-        }
-    }
-
-    return 1;
-}
-
-static int variableInBody(SymbolTable *global,SymbolTable * local, Node *node){
-    for (Node *child = node->firstChild; child != NULL; child = child->nextSibling){
-        if(child->label == Ident){
-            if(searchSymbol(local, child->name) == 0){
-                if(searchSymbol(global, child->name) == 0){
-                   printErr(child->name, child->lineno, ERR_UNDECLARED);
-                }
-            }   
-            if(FIRSTCHILD(child) && FIRSTCHILD(child)->label == Arguments){
-                sameTypeParameter(local, FIRSTCHILD(child), nbParamFuncAsso(global, child));
-            
-            }
-        }
-        variableInBody(global, local, child);
-    }
-    return 1 ;
-}
-
-
-void checkVariableDeclaration(SymbolTable *global , Node *node){
-    for (int i = 0; i < global->size; i++){
-        if(global->symbols[i].table != NULL){
-            variableInBody(global, global->symbols[i].table, global->symbols[i].funcNode);
-        }
-    }   
-}

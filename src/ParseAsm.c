@@ -85,7 +85,7 @@ static void translateExprToAsm(FILE * f, Node *node){
             }
             translateExprToAsm(f, FIRSTCHILD(node));
             translateExprToAsm(f, SECONDCHILD(node));
-            writeExpr(f, node);
+           writeExpr(f, node);
         }
     }
 }
