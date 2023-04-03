@@ -20,6 +20,10 @@
 
 #define ERR_TYPE_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: incompatible types when assigning to type '%s' from type '%s'\n"
 
+#define ERR_RETURN_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: returning '%s' from a function with return type '%s'."
+
+
+
 #define printErr(NAME, LINENO, ERRCODE)                                                  \
     ({                                                                                   \
         typeof(NAME) MSG = ERR_REDEC_VAR;                                                \

@@ -277,26 +277,20 @@ static void sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbPar
 static int isCorrectReturnValue(Types retval, Node *node, SymbolTable *table){
     // Checks if specified return node has the correct return value
     // void return value is not supposed to have any value
-    Types type = UNDEFINED;
     if (retval == VOID_TYPE && FIRSTCHILD(node)) {
         return 0;
-    } else if (retval == INT_TYPE) {
+    } else if (FIRSTCHILD(node)) {
         // Either it is a number, or it is an identificator with int type
-        if (FIRSTCHILD(node)->label == Num){
-            return 1;
-        } /*else if (FIRSTCHILD(node)->label == Ident) {
-            type = searchSymbolTypeInTable(table, FIRSTCHILD(node));
-            if (type == INT_TYPE) {
+        if (retval == INT_TYPE) {
+            if (FIRSTCHILD(node)->label == Num){
                 return 1;
             }
             return 0;
-        } else if (isOperand(FIRSTCHILD(node)) || isOrderOrEqual(FIRSTCHILD(node))) {
-            return 1;
-        }*/ else {
+        } else {
             return 0;
         }
     } else {
-        return 0;
+        return 1;
     }
 }
 
@@ -320,7 +314,7 @@ static void variableInBody(SymbolTable *global, SymbolTable *local, Node *node, 
         // If current node represents a return, compute checking with function type and return value
         if (child->label == _return_){
             if(!isCorrectReturnValue(funcRetType, child, local))
-                fprintf(stderr, "Not good ret val\n");
+                fprintf(stderr, "Ret value mismatch\n");
             if (!hasReturn)
                 hasReturn = 1;
         }
