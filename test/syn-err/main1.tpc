@@ -1,0 +1,11 @@
+int a , B ,V ,S ,S ;
+int main(void){
+    int a = a + 3 , b = a + b , c = b + c  , d = c - a ;
+    char a = "sdsd";
+    char test = '$';
+    int e = 3 + 4 ;
+    if(e && 9){
+    e = 6 + 3 ;
+}
+    return 0;
+}

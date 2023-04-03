@@ -1,0 +1,10 @@
+int b;
+char hello;
+
+int main(void) {
+   int a = 10;
+    if ((test == 40) && (oui == 50) || (res == 2)) {
+        return test;
+    }
+    return 0;
+}

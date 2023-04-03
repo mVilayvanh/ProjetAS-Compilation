@@ -1,0 +1,27 @@
+int b;
+char hello;
+
+void exponent(int base, int exp) { 
+    int resul, res, valeur, t, g;
+    int i;
+    result = 1;
+    while (result == 1) {
+        result = result + 1;
+    }
+    return result;
+}
+
+char main(void) {
+    int test;
+    int oui;
+    int res;
+    char a;
+    a = ' ';
+    test = 40;
+    oui = 50;
+    res = 6 / 3;
+    if ((test == 40) && (oui == 50) || (res == 2)) {
+        return test;
+    }
+    return 0;
+}

@@ -1,0 +1,14 @@
+int a, b;
+
+char c, d;
+
+void foo(void){
+    int a = -5, b = +6, e = 8;
+}
+
+char main(int p){
+    char b;
+    int a, e = 1;
+    return;
+}
+

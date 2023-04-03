@@ -1,0 +1,21 @@
+
+void abc(int a , int b){
+    return;
+}
+
+int main(int a, int b, char c) {
+    while (b != 0) {
+        if (a > b) {
+            a = a - b;
+            if (1);
+        }
+        else
+            b = b - a;
+    }
+    return b;
+    abc(c, q);
+}
+
+int truc(void) {
+    return;
+}
