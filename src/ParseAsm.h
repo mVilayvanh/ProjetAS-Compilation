@@ -9,5 +9,4 @@
 
 void writeAsm(SymbolTable * global );
 
-
 #endif

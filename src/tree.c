@@ -79,6 +79,17 @@ void searchNode(Node *from, label_t target, Node **res) {
     }
 }
 
+int isOrderOrEqual(Node *node){
+    return node->label == Order
+        || node->label == Eq;
+}
+
+int isOperand(Node *node){
+    return node->label == Addsub 
+        || node->label == Divstar
+        || node->label == UnaryAddsub;
+}
+
 void printTree(Node *node) {
     static bool rightmost[128]; // tells if node is rightmost sibling
     static int depth = 0;       // depth of current node

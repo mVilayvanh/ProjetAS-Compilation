@@ -37,9 +37,14 @@ static void writeAddSub(FILE * f, Node *node){
 }
 
 
-static void writeMul(FILE * f, Node *node){
-    fprintf(f,
-        "\t; Compute Mul\n\tpop rcx\n\tpop rax\n\timul rax, rcx\n\tpush rax\n");
+static void writeDivstar(FILE * f, Node *node){
+    if (strcmp(node->name, "*") == 0) {
+        fprintf(f,
+                "\t; Compute Mul\n\tpop rcx\n\tpop rax\n\timul rax, rcx\n\tpush rax\n");
+    } else {
+         fprintf(f,
+                "\t; Compute Mul\n\tpop rcx\n\tpop rax\n\timul rax, rcx\n\tpush rax\n");
+    }
 }
 
 static void writeExpr(FILE *f, Node *node){
@@ -51,7 +56,7 @@ static void writeExpr(FILE *f, Node *node){
             writeAddSub(f, node);
             break;
         case Divstar:
-            writeMul(f, node);
+            writeDivstar(f, node);
             break;
         default:
             fprintf(stderr, "Should not be here\n");
@@ -109,13 +114,10 @@ static void moveRootToSuitInstr(Node *root){
         root = FIRSTCHILD(root);
     }
 }
-static int isoperand(Node *node){
-    return node->label == Addsub || node->label == Divstar ;
-}
 
 static void searchop(FILE *f, Node *node){
     for (Node *child = FIRSTCHILD(node); child != NULL; child = child->nextSibling) {
-        if(isoperand(child) && !child->visited){
+        if(isOperand(child) && !child->visited){
             translateExprToAsm(f, child);
         }
         searchop(f, child);
