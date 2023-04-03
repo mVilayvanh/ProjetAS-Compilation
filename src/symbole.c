@@ -261,7 +261,7 @@ static Types searchSymbolInTable(SymbolTable *table, Node *node ){
     return UNDEFINED;
 }
 
-static int sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbParam){
+static void sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbParam){
     Node * child ;
     Types type = UNDEFINED;
     int i = 0 ;
@@ -269,13 +269,12 @@ static int sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbPara
         type = searchSymbolInTable(table, child);
         if (type != UNDEFINED){
             if(table->symbols[i].type != type){
-                fprintf(stderr,ERR_TYPE_MISMATCH,
-                    child->lineno,StringFromTypes[type],
+                fprintf(stderr, ERR_TYPE_MISMATCH,
+                    child->lineno, StringFromTypes[type],
                     StringFromTypes[table->symbols[i].type]);
             }
         }
     }
-    return 1;
 }
 
 static int variableInBody(SymbolTable *global, SymbolTable *local, Node *node){
