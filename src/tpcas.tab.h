@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.5.1.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -31,8 +31,9 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_SRC_TPCAS_TAB_H_INCLUDED
 # define YY_YY_SRC_TPCAS_TAB_H_INCLUDED
@@ -44,28 +45,33 @@
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    TYPE = 258,
-    VOID = 259,
-    IF = 260,
-    ELSE = 261,
-    WHILE = 262,
-    RETURN = 263,
-    OR = 264,
-    AND = 265,
-    ORDER = 266,
-    EQ = 267,
-    IDENT = 268,
-    NUM = 269,
-    CHARACTER = 270,
-    ADDSUB = 271,
-    DIVSTAR = 272,
-    THEN = 273
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    TYPE = 258,                    /* TYPE  */
+    VOID = 259,                    /* VOID  */
+    IF = 260,                      /* IF  */
+    ELSE = 261,                    /* ELSE  */
+    WHILE = 262,                   /* WHILE  */
+    RETURN = 263,                  /* RETURN  */
+    OR = 264,                      /* OR  */
+    AND = 265,                     /* AND  */
+    ORDER = 266,                   /* ORDER  */
+    EQ = 267,                      /* EQ  */
+    IDENT = 268,                   /* IDENT  */
+    NUM = 269,                     /* NUM  */
+    CHARACTER = 270,               /* CHARACTER  */
+    ADDSUB = 271,                  /* ADDSUB  */
+    DIVSTAR = 272,                 /* DIVSTAR  */
+    THEN = 273                     /* THEN  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
@@ -81,7 +87,7 @@ union YYSTYPE
     char ident[64];
     char comp[3];
 
-#line 85 "src/tpcas.tab.h"
+#line 91 "src/tpcas.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -92,6 +98,8 @@ typedef union YYSTYPE YYSTYPE;
 
 extern YYSTYPE yylval;
 
+
 int yyparse (void);
+
 
 #endif /* !YY_YY_SRC_TPCAS_TAB_H_INCLUDED  */

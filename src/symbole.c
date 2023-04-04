@@ -274,23 +274,52 @@ static void sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbPar
     }
 }
 
-static int isCorrectReturnValue(Types retval, Node *node, SymbolTable *table){
+static int matchingReturnValue(Types retval, Node *node, SymbolTable *table, Types *err){
     // Checks if specified return node has the correct return value
     // void return value is not supposed to have any value
+    // All good : 0; Void ret type something: 1, Mismatch type = 2
     if (retval == VOID_TYPE && FIRSTCHILD(node)) {
-        return 0;
+        if (FIRSTCHILD(node)->label == Ident) {
+           *err = searchSymbolTypeInTable(table, FIRSTCHILD(node));
+           if (*err == UNDEFINED)
+                return 0;
+           return 2;
+        } 
+        return 1;
     } else if (FIRSTCHILD(node)) {
+        if (FIRSTCHILD(node)->label == Ident) {
+            *err = searchSymbolTypeInTable(table, FIRSTCHILD(node));
+            if (*err == UNDEFINED)
+                return 0;
+        }
         // Either it is a number, or it is an identificator with int type
         if (retval == INT_TYPE) {
             if (FIRSTCHILD(node)->label == Num){
-                return 1;
+                return 0;
+            } else if (FIRSTCHILD(node)->label == Ident && *err == INT_TYPE){
+                return 0;
             }
-            return 0;
+            return 2;
         } else {
             return 0;
         }
     } else {
-        return 1;
+        return 0;
+    }
+}
+
+static void checkingErrcode(int err, int lineno, Types funcRet, Types retType) {
+    switch(err) {
+        case 1:
+            fprintf(stderr, ERR_RET_VOID_MISMATCH, lineno);
+            break;
+        case 2:
+            fprintf(stderr, ERR_RETURN_MISMATCH,
+                lineno, StringFromTypes[retType],
+                StringFromTypes[funcRet]);
+            break;
+        default:
+            break;
     }
 }
 
@@ -313,8 +342,9 @@ static void variableInBody(SymbolTable *global, SymbolTable *local, Node *node, 
         }
         // If current node represents a return, compute checking with function type and return value
         if (child->label == _return_){
-            if(!isCorrectReturnValue(funcRetType, child, local))
-                fprintf(stderr, "Ret value mismatch\n");
+            Types retType = VOID_TYPE;
+            int err = matchingReturnValue(funcRetType, child, local, &retType);
+            checkingErrcode(err, child->lineno, funcRetType, retType);  
             if (!hasReturn)
                 hasReturn = 1;
         }

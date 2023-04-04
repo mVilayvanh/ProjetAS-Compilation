@@ -16,7 +16,7 @@ for dir in test/*
 do
     for file in $dir/*
     do
-        ./bin/tpcas -t $file
+        ./bin/tpcas $file
         result=$?
         echo "$file : $result" >> report.txt
         if [ $result -eq 0 ]

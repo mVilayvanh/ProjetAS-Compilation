@@ -14,15 +14,20 @@
 
 #define ERR_UNDECLARED 1
 
-#define ERR_REDEC_VAR "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: redeclaration of '%s' with no linkage.\n"
+#define ERR_REDEC_VAR "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ redeclaration of '%s' with no linkage.\n"                          \
 
-#define ERR_UNDEC_VAR "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: '%s' undeclared (first use in this function)\n"
+#define ERR_UNDEC_VAR "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ '%s' undeclared (first use in this function)\n"                    \
 
-#define ERR_TYPE_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: incompatible types when assigning to type '%s' from type '%s'\n"
+#define ERR_TYPE_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: \
+ incompatible types when assigning to type '%s' from type '%s'\n"        \
 
-#define ERR_RETURN_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m: returning '%s' from a function with return type '%s'."
+#define ERR_RETURN_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ returning '%s' from a function with return type '%s'.\n"                 \
 
-
+#define ERR_RET_VOID_MISMATCH "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
+ return with a value, in function returning void.\n"                          \
 
 #define printErr(NAME, LINENO, ERRCODE)                                                  \
     ({                                                                                   \
