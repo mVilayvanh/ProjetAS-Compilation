@@ -273,6 +273,55 @@ static void sameTypeParameter(SymbolTable *table, Node *node, unsigned int nbPar
         }
     }
 }
+static Types selectCorectType(SymbolTable * global, SymbolTable * local , Node * node ){
+    Types res = UNDEFINED;
+    switch (node->label){
+    case Num:
+        res = INT_TYPE;
+        break;
+    case Character:
+        res = CHAR_TYPE;
+        break;
+    case Ident:
+        res = searchSymbolTypeInTable(local, node);
+        if (res == UNDEFINED){
+            res = searchSymbolTypeInTable(global, node);
+        }
+        break;
+
+    case Addsub :
+        res = INT_TYPE;
+        break;
+    case Divstar :
+        res = INT_TYPE;
+        break;
+    default:
+        break;
+    }
+    return res;
+}
+
+static int sameType(SymbolTable * global , SymbolTable * local, Node *node){
+    // on part du principe que le noeud est un noeud de type assign
+    Types type1 = searchSymbolTypeInTable(local, FIRSTCHILD(node));
+    Types type2 = selectCorectType(global,local, SECONDCHILD(node));
+    // cas pour les identifiants en global 
+    if (type1 == UNDEFINED){
+        type1 = searchSymbolTypeInTable(global, FIRSTCHILD(node));
+    }
+
+    if (type1 != type2 && type1 != UNDEFINED && type2 != UNDEFINED){
+        if (type1 == INT_TYPE && type2 == CHAR_TYPE){
+            return 1;
+        }
+        fprintf(stderr, ERR_TYPE_MISMATCH,
+            node->lineno, StringFromTypes[type1],
+            StringFromTypes[type2]);
+        return 0;
+    }
+    return 1;
+  
+}
 
 static int matchingReturnValue(Types retval, Node *node, SymbolTable *table, Types *err){
     // Checks if specified return node has the correct return value
@@ -301,9 +350,17 @@ static int matchingReturnValue(Types retval, Node *node, SymbolTable *table, Typ
             }
             return 2;
         } else {
-            return 0;
+            if (FIRSTCHILD(node)->label == Character){
+                return 0;
+            } else if (FIRSTCHILD(node)->label == Ident && *err == CHAR_TYPE){
+                return 0;
+            }
+            return 2;
         }
     } else {
+        if (retval != VOID_TYPE && !FIRSTCHILD(node)){
+            return 2;
+        }
         return 0;
     }
 }
@@ -339,6 +396,9 @@ static void variableInBody(SymbolTable *global, SymbolTable *local, Node *node, 
             if(FIRSTCHILD(child) && FIRSTCHILD(child)->label == Arguments){
                 sameTypeParameter(local, FIRSTCHILD(child), nbParamFuncAsso(global, child));       
             }
+        }
+        if (child->label == Assign){
+            sameType(global,local, child);
         }
         // If current node represents a return, compute checking with function type and return value
         if (child->label == _return_){

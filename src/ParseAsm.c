@@ -124,6 +124,11 @@ static void searchop(FILE *f, Node *node){
     } 
      
 }
+
+
+void writeWhile(){
+
+}
 void writeAsm(SymbolTable * global){
     Node * temp = NULL;
     if (!find_Main(global, &temp)){
