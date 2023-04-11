@@ -1,3 +1,4 @@
+test/good/gen-code-types.tpc : 0
 test/good/main3.tpc : 0
 test/good/test3.tpc : 0
 test/good/test4.tpc : 0

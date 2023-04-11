@@ -19,10 +19,22 @@ static void writeend(FILE * f){
 }
 
 static void writeLeaf(FILE *f, Node *leaf){
-    if (leaf->isnum)
-        fprintf(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->val);
-    //else
-        //fprintf(f, "\tmov eax, %s\n\tpush rax\n", leaf->name);
+    switch(leaf->label) {
+        case Num:
+            fprintf(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->val);
+            break;
+        case Character:
+            // Since Characters are only of size 1 + \0, retriving respectif ascii value
+            fprintf(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->name[1] - 0);
+            break;
+        case Ident:
+            // Case to set later
+            // Not sure yet how it will be implemented but expecting it to be on stack
+            break;
+        default:
+            break;
+    } 
+    
 }
 
 static void writeAddSub(FILE * f, Node *node){
@@ -43,7 +55,7 @@ static void writeDivstar(FILE * f, Node *node){
                 "\t; Compute Mul\n\tpop rcx\n\tpop rax\n\timul rax, rcx\n\tpush rax\n");
     } else {
          fprintf(f,
-                "\t; Compute Mul\n\tpop rcx\n\tpop rax\n\timul rax, rcx\n\tpush rax\n");
+                "\t; Compute Div\n\tpop rcx\n\tpop rax\n\tidiv rcx\n\tpush rax\n");
     }
 }
 
@@ -52,6 +64,8 @@ static void writeExpr(FILE *f, Node *node){
         case Num:
             writeLeaf(f, node);
             break;
+        case Character:
+            writeLeaf(f, node); break;
         case Addsub:
             writeAddSub(f, node);
             break;
@@ -65,9 +79,18 @@ static void writeExpr(FILE *f, Node *node){
     node->visited = 1;
 }
 
-static int BothChildAreNum(Node *node){
+static int bothChildAreNum(Node *node){
     return FIRSTCHILD(node) && FIRSTCHILD(node)->label == Num
         && SECONDCHILD(node) && SECONDCHILD(node)->label == Num;
+}
+
+static int bothChildAreChar(Node *node){
+    return FIRSTCHILD(node) && FIRSTCHILD(node)->label == Character
+        && SECONDCHILD(node) && SECONDCHILD(node)->label == Character;
+}
+
+static int bothChildArePrimitive(Node *node){
+    return bothChildAreNum(node) || bothChildAreChar(node);
 }
 
 static void translateExprToAsm(FILE * f, Node *node){
@@ -75,13 +98,18 @@ static void translateExprToAsm(FILE * f, Node *node){
     // Right child = NEXT SIBLING
     if (node){
         // Means that operation has to be applied
-        if (BothChildAreNum(node)){
+        if (bothChildArePrimitive(node)){
             writeExpr(f, FIRSTCHILD(node));
             writeExpr(f, SECONDCHILD(node));
             writeExpr(f, node);
         } else {
             // case to fix later
             if (node->label == Ident){
+                return;
+            
+            }
+            if (node->label == Character){
+                writeExpr(f, node);
                 return;
             }
             if (node->label == Num){
@@ -90,7 +118,7 @@ static void translateExprToAsm(FILE * f, Node *node){
             }
             translateExprToAsm(f, FIRSTCHILD(node));
             translateExprToAsm(f, SECONDCHILD(node));
-           writeExpr(f, node);
+            writeExpr(f, node);
         }
     }
 }
@@ -129,6 +157,7 @@ static void searchop(FILE *f, Node *node){
 void writeWhile(){
 
 }
+
 void writeAsm(SymbolTable * global){
     Node * temp = NULL;
     if (!find_Main(global, &temp)){

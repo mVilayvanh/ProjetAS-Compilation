@@ -401,7 +401,7 @@ static void variableInBody(SymbolTable *global, SymbolTable *local, Node *node, 
             sameType(global,local, child);
         }
         // If current node represents a return, compute checking with function type and return value
-        if (child->label == _return_){
+       if (child->label == _return_){
             Types retType = VOID_TYPE;
             int err = matchingReturnValue(funcRetType, child, local, &retType);
             checkingErrcode(err, child->lineno, funcRetType, retType);  
