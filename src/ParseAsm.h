@@ -7,6 +7,8 @@
 #include "tree.h"
 #include "symbole.h"
 
+#define BUFFERSIZE 2048
+
 void writeAsm(SymbolTable * global );
 
 #endif

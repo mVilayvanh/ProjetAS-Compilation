@@ -1,31 +1,48 @@
 #include "ParseAsm.h"
+#include <stdarg.h>
 
+char buffer[BUFFERSIZE] = "";
+
+static void writeOnBuffer(FILE *f, char *suffix, ...){
+    char tmp[BUFFERSIZE] = "";
+    va_list list;
+    if (strlen(buffer) + strlen(suffix) >= BUFFERSIZE) {
+        fprintf(f, buffer);
+        // reset buffer
+        buffer[0] = '\0';
+    }
+    
+    va_start(list, suffix);
+    vsprintf(tmp, suffix, list);
+    va_end(list);
+    strcat(buffer, tmp);
+}
 
 static void writeinit(FILE * f){
     if (f == NULL){
         printf("Erreur d'ouverture du fichier");
         exit(1);
     }
-    fprintf(f, "global _start\n");
-    fprintf(f, "extern show_registers\n");
-    fprintf(f, "section .text\n");
-    fprintf(f, "_start:\n");
+    
+    writeOnBuffer(f, "global _start\n");
+    writeOnBuffer(f, "extern show_registers\n");
+    writeOnBuffer(f, "section .text\n");
+    writeOnBuffer(f, "_start:\n");
 }
 
 static void writeend(FILE * f){
-    fprintf(f, "\tmov rbx, rax\n\tcall show_registers\n");
-    fprintf(f, "\tmov rax, 60\n\tmov rdi, 0\n\tsyscall\n");
-    fclose(f);
+    writeOnBuffer(f, "\tmov rbx, rax\n\tcall show_registers\n");
+    writeOnBuffer(f, "\tmov rax, 60\n\tmov rdi, 0\n\tsyscall\n");
 }
 
 static void writeLeaf(FILE *f, Node *leaf){
     switch(leaf->label) {
         case Num:
-            fprintf(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->val);
+            writeOnBuffer(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->val);
             break;
         case Character:
             // Since Characters are only of size 1 + \0, retriving respectif ascii value
-            fprintf(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->name[1] - 0);
+            writeOnBuffer(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->name[1] - 0);
             break;
         case Ident:
             // Case to set later
@@ -39,11 +56,11 @@ static void writeLeaf(FILE *f, Node *leaf){
 
 static void writeAddSub(FILE * f, Node *node){
     if (strcmp("+", node->name) == 0){
-        fprintf(f, 
+        writeOnBuffer(f, 
         "\t; Compute add\n\tpop rcx\n\tpop rax\n\tadd rax, rcx\n\tpush rax\n");
     } 
     else {
-        fprintf(f,
+        writeOnBuffer(f,
             "\t; Compute sub\n\tpop rcx\n\tpop rax\n\tsub rax, rcx\n\tpush rax\n");
     }
 }
@@ -51,10 +68,10 @@ static void writeAddSub(FILE * f, Node *node){
 
 static void writeDivstar(FILE * f, Node *node){
     if (strcmp(node->name, "*") == 0) {
-        fprintf(f,
+        writeOnBuffer(f,
                 "\t; Compute Mul\n\tpop rcx\n\tpop rax\n\timul rax, rcx\n\tpush rax\n");
     } else {
-         fprintf(f,
+         writeOnBuffer(f,
                 "\t; Compute Div\n\tpop rcx\n\tpop rax\n\tidiv rcx\n\tpush rax\n");
     }
 }
@@ -169,5 +186,7 @@ void writeAsm(SymbolTable * global){
     moveRootToSuitInstr(temp);
     searchop(f, temp);
     writeend(f);
+    fprintf(f, buffer);
+    fclose(f);
 }
 
