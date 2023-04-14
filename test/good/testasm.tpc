@@ -4,5 +4,5 @@ int main(void){
     a = 10 * 2;
     a = 1 + 1;
     a = 1 * 2 + (5 - 4 * 2);
-    return;
+    return 0;
 }

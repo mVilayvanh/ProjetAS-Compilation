@@ -46,7 +46,17 @@ static void addBytes(SymbolTable *table, Types type) {
             break;
     }
 }
-       
+
+static int searchSymbol(SymbolTable *table, char *name){
+    int i;
+    for (i = 0; i < table->size; i++){
+        if (strcmp(table->symbols[i].name, name) == 0){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int addSymbol(SymbolTable *table, char *name, Types type, SymbolTable *ptr, Node *funcNode){
     // Vérifie si le symbole existe déjà dans la table
     for (int i = 0; i < table->size; i++){
@@ -86,7 +96,7 @@ static int selectType(char *name){
     }
 }
 
-static int addVariable(SymbolTable *table, Node *node){
+static int addVariable(SymbolTable *global, SymbolTable *table, Node *node){
     Node *child = NULL;
     Node *subChild = NULL;
     Node *varNode = NULL;
@@ -101,6 +111,16 @@ static int addVariable(SymbolTable *table, Node *node){
             if (subChild->label == Assign) {
                 // Variable declaration with initialization
                 varNode = FIRSTCHILD(subChild);
+                // If current variable is going to be assigned to another
+                if (SECONDCHILD(subChild)->label == Ident) {
+                    if (!searchSymbol(table, SECONDCHILD(subChild)->name)){
+                        // Semantic error
+                        if (!searchSymbol(global, SECONDCHILD(subChild)->name)) {
+                            fprintf(stderr, ERR_UNDEC_VAR, SECONDCHILD(subChild)->lineno, 
+                                SECONDCHILD(subChild)->name);
+                        }
+                    }
+                }
             } else {
                 // Regular variable declaration
                 varNode = subChild;
@@ -117,7 +137,7 @@ static int addVariable(SymbolTable *table, Node *node){
 }
 
 
-static int fillLocalSymbolTable(SymbolTable *table, Node *node){
+static int fillLocalSymbolTable(SymbolTable *global, SymbolTable *table, Node *node){
     // Do not build from null pointer table.
     if (!table){
         return 2;
@@ -125,14 +145,14 @@ static int fillLocalSymbolTable(SymbolTable *table, Node *node){
     Node *temp = THIRDCHILD(FIRSTCHILD(node));
     // Do not add parameter if there is none
     if (strcmp("void", FIRSTCHILD(temp)->name) != 0){
-        addVariable(table, temp);
+        addVariable(global, table, temp);
     }
     // Move to function's body
     temp = SECONDCHILD(node);
     // Get local variable nodes
     if (FIRSTCHILD(temp)->label == DeclarVarLoc) {
         // Fill table from variable declaration
-        addVariable(table, FIRSTCHILD(temp));
+        addVariable(global, table, FIRSTCHILD(temp));
     }
 
     return 1;
@@ -149,7 +169,7 @@ static int fillGlobalSymbolTable(SymbolTable *table, Node *node){
     // Get global variable nodes
     if (FIRSTCHILD(node)->label == DeclarVarGlob){
         // add all global variable found
-        addVariable(table, FIRSTCHILD(node));
+        addVariable(NULL, table, FIRSTCHILD(node));
         // Function declarators must be second child
         child = SECONDCHILD(node);
     } else {
@@ -160,7 +180,7 @@ static int fillGlobalSymbolTable(SymbolTable *table, Node *node){
     // Search among all existing functions
     for (child = FIRSTCHILD(child); child != NULL; child = child->nextSibling){
         initSymbolTable(&temp);
-        if(!fillLocalSymbolTable(temp, child)){
+        if(!fillLocalSymbolTable(table, temp, child)){
             return 0;
         }
          if ((type = selectType(FIRSTCHILD(FIRSTCHILD(child))->name)) == UNDEFINED){
@@ -223,16 +243,6 @@ void printSymbolTable(const SymbolTable *table){
         printf("\n%s:\n", name[i]);
         printSymbolTable((SymbolTable *) array[i]);
     }
-}
-
-static int searchSymbol(SymbolTable *table, char *name){
-    int i;
-    for (i = 0; i < table->size; i++){
-        if (strcmp(table->symbols[i].name, name) == 0){
-            return 1;
-        }
-    }
-    return 0;
 }
 
 static int nbParamFuncAsso(SymbolTable *table, Node *node){

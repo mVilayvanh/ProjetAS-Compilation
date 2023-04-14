@@ -1,0 +1,7 @@
+int c;
+
+int main(void){
+    int a = b;
+    int b = c;
+    return 0;
+}
