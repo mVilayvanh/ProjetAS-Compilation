@@ -28,14 +28,9 @@
 
 #define ERR_RET_VOID_MISMATCH "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
  return with a value, in function returning void.\n"                          \
+                                                                              \
 
-#define printErr(NAME, LINENO, ERRCODE)                                                  \
-    ({                                                                                   \
-        typeof(NAME) MSG = ERR_REDEC_VAR;                                                \
-        if (ERRCODE == 1)                                                                \
-            MSG = ERR_UNDEC_VAR;                                                         \
-        fprintf(stderr, MSG, (LINENO), (NAME));                                          \
-     })                                                                                  \
+extern int err_flag;
 
 typedef enum types{
     INT_TYPE,
@@ -43,6 +38,15 @@ typedef enum types{
     VOID_TYPE,
     UNDEFINED /*inutile car comprit dans le lexeur */
 } Types;
+
+typedef enum err_c {
+    UNDECLARED,
+    REDECLARED,
+    TYPE_MISMATCH,
+    VOID_TYPE_RET,
+    FUNC_ARG,
+    NO_ERR
+} Err_c;
 
 typedef struct Symbol{
     char *name;

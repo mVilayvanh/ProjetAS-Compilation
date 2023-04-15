@@ -1,9 +1,10 @@
 test/good/gen-code-types.tpc : 0
-test/good/main3.tpc : 0
+test/good/main3.tpc : 2
 test/good/test3.tpc : 0
-test/good/test4.tpc : 0
-test/good/test5.tpc : 0
-test/good/test6.tpc : 0
+test/good/test4.tpc : 2
+test/good/test5.tpc : 2
+test/good/test6.tpc : 2
+test/good/test7.tpc : 2
 test/good/testasm.tpc : 0
 test/syn-err/main1.tpc : 1
 test/syn-err/main2.tpc : 1

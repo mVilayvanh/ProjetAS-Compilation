@@ -23,6 +23,7 @@ int tree_flag = 0;
 int varGlob_flag = 0;
 int varLoc_flag = 0;
 int suiteInstr_flag = 0;
+int err_flag = 0;
 
 %}
 
@@ -419,6 +420,7 @@ int yyerror(char *msg){
 }
 
 int main(int argc, char *argv[]){
+    int retval;
     if (read_option(argc, argv) == 1){
         fprintf(stderr, "option do not exists\n");
         return 2;
@@ -430,5 +432,9 @@ int main(int argc, char *argv[]){
     if (argc > 1 && !last_is_option(argc, argv)){
         freopen(argv[argc - 1], "r", stdin);
     }
-    return yyparse();
+    retval = yyparse();
+    if (err_flag) {
+        return 2;
+    }
+    return retval;
 }

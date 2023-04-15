@@ -7,7 +7,7 @@ static void writeOnBuffer(FILE *f, char *suffix, ...){
     char tmp[BUFFERSIZE] = "";
     va_list list;
     if (strlen(buffer) + strlen(suffix) >= BUFFERSIZE) {
-        fprintf(f, buffer);
+        fprintf(f, "%s", buffer);
         // reset buffer
         buffer[0] = '\0';
     }
@@ -186,7 +186,7 @@ void writeAsm(SymbolTable * global){
     moveRootToSuitInstr(temp);
     searchop(f, temp);
     writeend(f);
-    fprintf(f, buffer);
+    fprintf(f, "%s", buffer);
     fclose(f);
 }
 
