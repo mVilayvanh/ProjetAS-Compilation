@@ -39,6 +39,12 @@
 #define ERR_RET_VOID_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
  return with no value, in function returning non-void type.\n"              \
 
+ #define ERR_FUNC_WRONG_USAGE "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ calling function '%s' without '()' token .\n" 
+
+#define ERR_FUNC_ARG_NUMBER "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ too many arguments to function '%s'.\n"       
+
 extern int err_flag;
 
 typedef enum types{
@@ -57,6 +63,7 @@ typedef enum err_c {
     RET_TYPE_MISMATCH,
     FUNC_ARG_NUMBER,
     FUNC_NAME_USED,
+    FUNC_WRONG_USAGE,
     NO_ERR
 } Err_c;
 

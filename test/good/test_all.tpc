@@ -29,7 +29,7 @@ void tutu(int z, char x){
     return;
 }
 
-int main(void) {
+int main(void){
     int d; // com test
     int ezzz, f_6aa;
     int g = -1, h = '2', i = (3 + 4) * 5 / 6 % 7;
@@ -74,6 +74,7 @@ int main(void) {
     return 0;
 }
 
+
 int foo2(int foo){
-    foo = main();
+    foo = main(a , b);
 }
