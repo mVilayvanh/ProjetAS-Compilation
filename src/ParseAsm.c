@@ -90,7 +90,7 @@ static void writeExpr(FILE *f, Node *node){
             writeDivstar(f, node);
             break;
         default:
-            fprintf(stderr, "Should not be here\n");
+            //fprintf(stderr, "Should not be here\n");
             break;
     }
     node->visited = 1;
