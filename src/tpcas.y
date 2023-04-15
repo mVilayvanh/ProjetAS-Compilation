@@ -385,6 +385,7 @@ F   :  ADDSUB F                                 {
                                                     $$ = makeNode(Ident);
                                                     $$->name = strdup($1);
                                                     addChild($$, $3);
+                                                    
                                                 }
     ;
 LValue:
@@ -400,7 +401,9 @@ Arguments:
                                                 }
     |                                           {
                                                     $$ = makeNode(Arguments);
-                                                    addChild($$, makeNode(Type));
+                                                    Node * Child = makeNode(Type);
+                                                    Child->name = strdup("void");
+                                                    addChild($$, Child);
                                                 }
     ;
 ListExp:

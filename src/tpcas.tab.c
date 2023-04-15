@@ -567,7 +567,7 @@ static const yytype_int16 yyrline[] =
      220,   236,   241,   247,   253,   258,   264,   269,   277,   282,
      287,   291,   294,   297,   301,   306,   310,   315,   319,   325,
      329,   336,   340,   346,   350,   356,   360,   365,   369,   372,
-     377,   381,   384,   391,   397,   401,   407,   410
+     377,   381,   384,   392,   398,   402,   410,   413
 };
 #endif
 
@@ -1753,55 +1753,58 @@ yyreduce:
                                                     (yyval.node) = makeNode(Ident);
                                                     (yyval.node)->name = strdup((yyvsp[-3].ident));
                                                     addChild((yyval.node), (yyvsp[-1].node));
+                                                    
                                                 }
-#line 1758 "src/tpcas.tab.c"
+#line 1759 "src/tpcas.tab.c"
     break;
 
   case 53: /* LValue: IDENT  */
-#line 391 "src/tpcas.y"
+#line 392 "src/tpcas.y"
                                                 {
                                                     (yyval.node) = makeNode(Ident);
                                                     (yyval.node)->name = strdup((yyvsp[0].ident));
                                                 }
-#line 1767 "src/tpcas.tab.c"
+#line 1768 "src/tpcas.tab.c"
     break;
 
   case 54: /* Arguments: ListExp  */
-#line 397 "src/tpcas.y"
+#line 398 "src/tpcas.y"
                                                 {
                                                     (yyval.node) = makeNode(Arguments);
                                                     addChild((yyval.node), (yyvsp[0].node));
                                                 }
-#line 1776 "src/tpcas.tab.c"
+#line 1777 "src/tpcas.tab.c"
     break;
 
   case 55: /* Arguments: %empty  */
-#line 401 "src/tpcas.y"
+#line 402 "src/tpcas.y"
                                                 {
                                                     (yyval.node) = makeNode(Arguments);
-                                                    addChild((yyval.node), makeNode(Type));
+                                                    Node * Child = makeNode(Type);
+                                                    Child->name = strdup("void");
+                                                    addChild((yyval.node), Child);
                                                 }
-#line 1785 "src/tpcas.tab.c"
+#line 1788 "src/tpcas.tab.c"
     break;
 
   case 56: /* ListExp: ListExp ',' Exp  */
-#line 407 "src/tpcas.y"
+#line 410 "src/tpcas.y"
                                                 { 
                                                     addSibling((yyvsp[-2].node), (yyvsp[0].node));
                                                 }
-#line 1793 "src/tpcas.tab.c"
+#line 1796 "src/tpcas.tab.c"
     break;
 
   case 57: /* ListExp: Exp  */
-#line 410 "src/tpcas.y"
+#line 413 "src/tpcas.y"
                                                 { 
                                                     (yyval.node) = (yyvsp[0].node); 
                                                 }
-#line 1801 "src/tpcas.tab.c"
+#line 1804 "src/tpcas.tab.c"
     break;
 
 
-#line 1805 "src/tpcas.tab.c"
+#line 1808 "src/tpcas.tab.c"
 
       default: break;
     }
@@ -1994,7 +1997,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 414 "src/tpcas.y"
+#line 417 "src/tpcas.y"
 
 
 int yyerror(char *msg){

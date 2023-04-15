@@ -324,12 +324,17 @@ static int nbParamFuncAsso(SymbolTable *table, Node *node){
 static int countArgument(Node * node){
     int i = 0;
     Node *child;
-    if(Node)
+    // le cas on le type de l'arg est void 
+    if(strcmp(FIRSTCHILD(node)->name, "void") == 0){
+        return 0;
+    }
     for (child = FIRSTCHILD(node); child != NULL; child = child->nextSibling){
         i++;
     }
     return i;
 }
+
+
 static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
     Node *child ,*arguments;
     Symbol *tmp;
