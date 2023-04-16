@@ -3,21 +3,21 @@ extern show_registers
 section .text
 _start:
 	; Add Leaf
-	mov eax, 1
+	mov eax, 20
 	push rax
 	; Add Leaf
-	mov eax, 3
+	mov eax, 10
 	push rax
-	; Add Leaf
-	mov eax, 4
-	push rax
-	; Compute add
+	; Compute sub
 	pop rcx
 	pop rax
-	add rax, rcx
+	sub rax, rcx
 	push rax
 	; Add Leaf
-	mov eax, 5
+	mov eax, 10
+	push rax
+	; Add Leaf
+	mov eax, 2
 	push rax
 	; Compute Mul
 	pop rcx
@@ -25,20 +25,7 @@ _start:
 	imul rax, rcx
 	push rax
 	; Add Leaf
-	mov eax, 6
-	push rax
-	; Compute Div
-	pop rcx
-	pop rax
-	idiv rcx
-	push rax
-	; Add Leaf
-	mov eax, 7
-	push rax
-	; Compute Div
-	pop rcx
-	pop rax
-	idiv rcx
+	mov eax, 1
 	push rax
 	; Add Leaf
 	mov eax, 1
@@ -54,17 +41,6 @@ _start:
 	; Add Leaf
 	mov eax, 2
 	push rax
-	; Compute add
-	pop rcx
-	pop rax
-	add rax, rcx
-	push rax
-	; Add Leaf
-	mov eax, 3
-	push rax
-	; Add Leaf
-	mov eax, 4
-	push rax
 	; Compute Mul
 	pop rcx
 	pop rax
@@ -73,23 +49,26 @@ _start:
 	; Add Leaf
 	mov eax, 5
 	push rax
-	; Compute Div
-	pop rcx
-	pop rax
-	idiv rcx
+	; Add Leaf
+	mov eax, 4
 	push rax
 	; Add Leaf
-	mov eax, 6
+	mov eax, 2
 	push rax
-	; Compute Div
+	; Compute Mul
 	pop rcx
 	pop rax
-	idiv rcx
+	imul rax, rcx
 	push rax
 	; Compute sub
 	pop rcx
 	pop rax
 	sub rax, rcx
+	push rax
+	; Compute add
+	pop rcx
+	pop rax
+	add rax, rcx
 	push rax
 	mov rbx, rax
 	call show_registers

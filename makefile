@@ -9,9 +9,9 @@ BIN = ./bin/
 
 .PHONY: clean analex
 
-analex: $(EXEC).tab.c bin/tpcas
+analex: $(EXEC).tab.c bin/tpcc
 
-bin/tpcas: obj/lex.yy.o obj/$(EXEC).tab.o obj/tree.o obj/Format.o obj/symbole.o obj/ParseAsm.o
+bin/tpcc: obj/lex.yy.o obj/$(EXEC).tab.o obj/tree.o obj/Format.o obj/symbole.o obj/ParseAsm.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 obj/lex.yy.o: src/lex.yy.c src/$(EXEC).tab.h src/tree.h
@@ -36,7 +36,7 @@ obj/%.o: src/%.c
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean: 
-	rm -f bin/$(EXEC)
+	rm -f bin/tpcc
 	rm -f src/$(EXEC).tab.*
 	rm -f src/lex.*
 	rm -f obj/*.o

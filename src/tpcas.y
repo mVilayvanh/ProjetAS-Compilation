@@ -65,7 +65,7 @@ Prog:  DeclarVarGlob DeclFoncts {
                                     }
                                     //printSymbolTable(table);
                                     // Construction code assembleur
-                                    writeAsm(table);
+                                    //writeAsm(table);
                                     freeSymbolTable(&table);
                                     deleteTree($$);
                                 }

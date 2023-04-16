@@ -80,6 +80,9 @@ static void raise_sem_err(Err_c code, Node *node, ...) {
         case FUNC_WRONG_USAGE:
             fprintf(stderr, ERR_FUNC_WRONG_USAGE, node->lineno, node->name);
             break;
+        case CHAR_ASSIGNEMENT:
+            fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
+            break;
         default:
             break;
     }
@@ -164,11 +167,114 @@ static int selectType(char *name){
     }
 }
 
+static int nbParamFuncAsso(SymbolTable *table, Node *node){
+    SymbolTable *temp = NULL;
+    // Search among functions in global table 
+    for(int i = 0 ; i < table->size ; i++){
+        // If found in table, gets its number of parameter
+        if(strcmp(table->symbols[i].name, node->name) == 0){
+            temp =(SymbolTable *)(table->symbols[i].table);
+            return temp->nparam;
+        }
+    }
+    return 0;
+}
+
+static int countArgument(Node * node){
+    int i = 0;
+    Node *child;
+    // le cas on le type de l'arg est void 
+    if(strcmp(FIRSTCHILD(node)->name, "void") == 0 && FIRSTCHILD(node)->nextSibling == NULL){
+        return 0;
+    }
+    for (child = FIRSTCHILD(node); child != NULL; child = child->nextSibling){
+        i++;
+    }
+    return i;
+}
+
+
+static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
+    Node *child ,*arguments;
+    Symbol *tmp;
+    Types type = UNDEFINED;
+    int i = 0;
+    // Compute type checking similarity between current function's node and parameters in function where
+    // it is called
+    if(FIRSTCHILD(node) == NULL){
+        raise_sem_err(FUNC_WRONG_USAGE, node);
+        return 1;
+    }
+    arguments = FIRSTCHILD(node);
+    
+
+    for (child = arguments->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
+        if (child->label == Ident){
+            tmp = searchSymbol(global, local, child->name);
+            // Not found
+            if (!tmp){
+                raise_sem_err(UNDECLARED, child);
+                return 1;
+            }
+            type = tmp->type;
+        } else if (child->label == Num) {
+            type = INT_TYPE;
+        } 
+        
+        
+        if (type != UNDEFINED && local->symbols[i].type != type){
+            raise_sem_err(TYPE_MISMATCH, child, type, local->symbols[i].type);
+            return 1;
+        }
+    }
+    if (countArgument(arguments) != nbParam){
+        raise_sem_err(FUNC_ARG_NUMBER, node);
+        return 1 ;
+    }
+    return 0;
+}
+
+static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *node){
+    Types res = UNDEFINED;
+    Symbol *tmp;
+    switch (node->label){
+    case Num:
+        res = INT_TYPE;
+        break;
+    case Character:
+        res = CHAR_TYPE;
+        break;
+    case Ident:
+        tmp = searchSymbol(global, local, node->name);
+        if (tmp && tmp->funcNode == NULL)
+            res = tmp->type;
+        else if (tmp && tmp->funcNode != NULL){
+            if(checkArgument(global, tmp->table, node, nbParamFuncAsso(global, node)) == 0)
+                res = tmp->type;
+            else
+                res = UNDEFINED;
+        }else
+            res = UNDEFINED;
+        break;
+
+    case Addsub :
+        res = INT_TYPE;
+        break;
+    case Divstar :
+        res = INT_TYPE;
+        break;
+    default:
+        break;
+    }
+    return res;
+}
+
+
 static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
     Node *child = NULL;
     Node *subChild = NULL;
     Node *varNode = NULL;
-    Types type = UNDEFINED;
+    Types type = UNDEFINED , type2 = UNDEFINED;
 
     for (child = FIRSTCHILD(node); child != NULL; child = child->nextSibling) {
         if ((type = selectType(child->name)) == UNDEFINED){
@@ -180,14 +286,17 @@ static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
                 // Variable declaration with initialization
                 varNode = FIRSTCHILD(subChild);
                 // If current variable is going to be assigned to another
-                if (SECONDCHILD(subChild)->label == Ident) {
-                    // Declared var
-                    if (!searchSymbol(global, local, SECONDCHILD(subChild)->name)){
-                        raise_sem_err(UNDECLARED, SECONDCHILD(subChild));
-                    }
+                type2 = selectCorectType(global, local, SECONDCHILD(subChild));
+                if (type2 == UNDEFINED && SECONDCHILD(subChild)->label == Arguments && searchSymbol(global, NULL, SECONDCHILD(subChild)->name) != NULL){
+                    raise_sem_err(UNDECLARED , SECONDCHILD(subChild));
+                }else if(type2 == INT_TYPE && type == CHAR_TYPE){
+                    // Case assignement to int variable with a char type value
+                    isWarning = 1;
+                    raise_sem_err(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
                 }
+            
             } else {
-                // Regular variable declaration
+             // Regular variable declaration
                 varNode = subChild;
             }
             if (!addSymbol(local, varNode->name, type, NULL,NULL)){
@@ -220,6 +329,11 @@ static int fillLocalSymbolTable(SymbolTable *global, SymbolTable *table, Node *n
     }
 
     return 1;
+}
+
+static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
+    Node *func_start = makeNode(DeclFonct);
+
 }
 
 static int fillGlobalSymbolTable(SymbolTable *table, Node *node){
@@ -308,107 +422,7 @@ void printSymbolTable(const SymbolTable *table){
     }
 }
 
-static int nbParamFuncAsso(SymbolTable *table, Node *node){
-    SymbolTable *temp = NULL;
-    // Search among functions in global table 
-    for(int i = 0 ; i < table->size ; i++){
-        // If found in table, gets its number of parameter
-        if(strcmp(table->symbols[i].name, node->name) == 0){
-            temp =(SymbolTable *)(table->symbols[i].table);
-            return temp->nparam;
-        }
-    }
-    return 0;
-}
 
-static int countArgument(Node * node){
-    int i = 0;
-    Node *child;
-    // le cas on le type de l'arg est void 
-    if(strcmp(FIRSTCHILD(node)->name, "void") == 0){
-        return 0;
-    }
-    for (child = FIRSTCHILD(node); child != NULL; child = child->nextSibling){
-        i++;
-    }
-    return i;
-}
-
-
-static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
-    Node *child ,*arguments;
-    Symbol *tmp;
-    Types type = UNDEFINED;
-    int i = 0;
-    // Compute type checking similarity between current function's node and parameters in function where
-    // it is called
-    if(FIRSTCHILD(node) == NULL){
-        raise_sem_err(FUNC_WRONG_USAGE, node);
-        return 1;
-    }
-    arguments = FIRSTCHILD(node);
-    
-
-    for (child = arguments->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
-        if (child->label == Ident){
-            tmp = searchSymbol(global, local, child->name);
-            // Not found
-            if (!tmp){
-                raise_sem_err(UNDECLARED, child);
-                return 1;
-            }
-            type = tmp->type;
-        } else if (child->label == Num) {
-            type = INT_TYPE;
-        } 
-        
-        
-        if (type != UNDEFINED && local->symbols[i].type != type){
-            raise_sem_err(TYPE_MISMATCH, child, type, local->symbols[i].type);
-            return 1;
-        }
-    }
-    if (countArgument(arguments) != nbParam){
-        raise_sem_err(FUNC_ARG_NUMBER, node);
-        return 1 ;
-    }
-    return 0;
-}
-
-static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *node){
-    Types res = UNDEFINED;
-    Symbol *tmp;
-    switch (node->label){
-    case Num:
-        res = INT_TYPE;
-        break;
-    case Character:
-        res = CHAR_TYPE;
-        break;
-    case Ident:
-        tmp = searchSymbol(global, local, node->name);
-        if (tmp && tmp->funcNode == NULL)
-            res = tmp->type;
-        else if (tmp && tmp->funcNode != NULL){
-            if(checkArgument(global, tmp->table, node, nbParamFuncAsso(global, node)) == 0)
-                res = tmp->type;
-            else
-                res = UNDEFINED;
-        }else
-            res = UNDEFINED;
-        break;
-
-    case Addsub :
-        res = INT_TYPE;
-        break;
-    case Divstar :
-        res = INT_TYPE;
-        break;
-    default:
-        break;
-    }
-    return res;
-}
 
 static Err_c matchingReturnValue(Types retval, Node *node,
     SymbolTable *global, SymbolTable *local, Types *err){

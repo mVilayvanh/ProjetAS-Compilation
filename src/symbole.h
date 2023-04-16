@@ -43,7 +43,10 @@
  calling function '%s' without '()' token .\n" 
 
 #define ERR_FUNC_ARG_NUMBER "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
- too many arguments to function '%s'.\n"       
+ wrong number arguments to function '%s'.\n" 
+
+#define WARN_CHAR_ASSIGNEMENT "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
+ '%s' is a char type but assignement is an int type .\n"            
 
 extern int err_flag;
 
@@ -64,6 +67,7 @@ typedef enum err_c {
     FUNC_ARG_NUMBER,
     FUNC_NAME_USED,
     FUNC_WRONG_USAGE,
+    CHAR_ASSIGNEMENT,
     NO_ERR
 } Err_c;
 

@@ -1,0 +1,13 @@
+int toto(int a, int b){
+    return a+b;
+}
+
+int main(void){
+    int a = main;
+    int b = 2;
+    int c = toto(a,b);
+
+    b = z;
+
+    return 0;
+}

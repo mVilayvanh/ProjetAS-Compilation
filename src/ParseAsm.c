@@ -66,6 +66,7 @@ static void writeAddSub(FILE * f, Node *node){
 }
 
 
+
 static void writeDivstar(FILE * f, Node *node){
     if (strcmp(node->name, "*") == 0) {
         writeOnBuffer(f,
@@ -76,18 +77,77 @@ static void writeDivstar(FILE * f, Node *node){
     }
 }
 
+
+// modifier les registres
+static void writeOrder(FILE * f , Node * node){
+    if (strcmp(node->name ,"<") == 0 ){
+        writeOnBuffer(f,"\t; Compute Order\n\tcmp rax, rcx\n\tjl .etrue\n\tjmp .efalse\n");
+    }else if (strcmp(node->name ,">") == 0 ){
+        writeOnBuffer(f,"\t; Compute Order\n\tcmp rax, rcx\n\tjg .etrue\n\tjmp .efalse\n");
+    }else if (strcmp(node->name ,"<=") == 0 ){
+        writeOnBuffer(f,"\t; Compute Order\n\tcmp rax, rcx\n\tjge .etrue\n\tjmp .efalse\n");
+    }else if (strcmp(node->name ,">=") == 0 ){
+        writeOnBuffer(f,"\t; Compute Order\n\tcmp rax, rcx\n\tjle .etrue\n\tjmp .efalse\n");
+    }else{
+        fprintf(stderr, "elle existe pas \n");
+    }
+
+}
+
+static void writeAnd(FILE * f , Node *node){
+    writeOnBuffer(f,"\t; Compute Or\n\tcmp rax, 0\n\tje .efalse\n\tcmp rcx, 0\n\tje .efalse\n\tjmp .etrue\n");
+}
+
+static void writeOr(FILE * f , Node *node){
+
+    writeOnBuffer(f,"\t; Compute Or\n\tcmp rax, 0\n\tjne .etrue\n\tcmp rcx, 0\n\tjne .etrue\n\tjmp .efalse\n");
+}
+
+
+static void writeEq(FILE * f , Node * node){
+    if (strcmp(node->name ,"==") == 0 ){
+        writeOnBuffer(f,"\t; Compute Eq\n\tcmp rax, rcx\n\tje .etrue\n\tjmp .efalse\n");
+    }else if (strcmp(node->name ,"!=") == 0 ){
+        writeOnBuffer(f,"\t; Compute Eq\n\tcmp rax, rcx\n\tjne .etrue\n\tjmp .efalse\n");
+    }else{
+        fprintf(stderr, "elle existe pas \n");
+    }
+}
+
+static void writeIf(FILE * f , Node *node){
+    
+    for (Node *child = FIRSTCHILD(node); child; child = child->nextSibling){
+        if (child->label ==Order){
+            writeOrder(f, child);
+        }else if (child->label ==Eq){
+            writeEq(f, child);
+        }else if (child->label ==and){
+            writeAnd(f, FIRSTCHILD(child));
+        }else if (child->label ==or){
+            writeOr(f, FIRSTCHILD(child));
+        }
+    }
+}
+
+
 static void writeExpr(FILE *f, Node *node){
     switch (node->label){
         case Num:
             writeLeaf(f, node);
             break;
         case Character:
-            writeLeaf(f, node); break;
+            writeLeaf(f, node); 
+            break;
         case Addsub:
             writeAddSub(f, node);
             break;
         case Divstar:
             writeDivstar(f, node);
+            break;
+        case Order:
+            writeOrder(f, node);
+        case Eq:
+            writeEq(f, node);
             break;
         default:
             //fprintf(stderr, "Should not be here\n");
@@ -95,6 +155,9 @@ static void writeExpr(FILE *f, Node *node){
     }
     node->visited = 1;
 }
+
+
+
 
 static int bothChildAreNum(Node *node){
     return FIRSTCHILD(node) && FIRSTCHILD(node)->label == Num
@@ -165,15 +228,15 @@ static void searchop(FILE *f, Node *node){
         if(isOperand(child) && !child->visited){
             translateExprToAsm(f, child);
         }
+        if (child->label == _if_){
+            writeIf(f, child);
+        }
         searchop(f, child);
     } 
      
 }
 
 
-void writeWhile(){
-
-}
 
 void writeAsm(SymbolTable * global){
     Node * temp = NULL;

@@ -76,5 +76,5 @@ int main(void){
 
 
 int foo2(int foo){
-    foo = main(a);
+    foo = main();
 }

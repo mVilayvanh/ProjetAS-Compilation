@@ -1,0 +1,8 @@
+int main(void){
+    int a = main;
+    return 0;
+}
+
+int bark(void){
+    return 1 ;
+}
