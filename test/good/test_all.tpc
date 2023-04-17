@@ -69,7 +69,7 @@ int main(void){
 
     g = getint();
 
-    toto (toto(1, 'a'), toto(1, n));
+    toto (a,a);
 
     return 0;
 }

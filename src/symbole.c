@@ -184,8 +184,11 @@ static int countArgument(Node * node){
     int i = 0;
     Node *child;
     // le cas on le type de l'arg est void 
-    if(strcmp(FIRSTCHILD(node)->name, "void") == 0 && FIRSTCHILD(node)->nextSibling == NULL){
-        return 0;
+
+    if (FIRSTCHILD(node)->name != NULL){
+        if(strcmp(FIRSTCHILD(node)->name, "void") == 0){
+            return i;
+        }
     }
     for (child = FIRSTCHILD(node); child != NULL; child = child->nextSibling){
         i++;
@@ -269,6 +272,15 @@ static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *no
     return res;
 }
 
+static int checkIsFunction(SymbolTable *global ,Node *node){
+    Symbol *tmp;
+     if((tmp = searchSymbol(global, NULL, node->name))){
+        if (tmp && tmp->funcNode != NULL){
+            return 1;
+        }
+    }
+    return 0;
+}
 
 static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
     Node *child = NULL;
@@ -287,7 +299,7 @@ static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
                 varNode = FIRSTCHILD(subChild);
                 // If current variable is going to be assigned to another
                 type2 = selectCorectType(global, local, SECONDCHILD(subChild));
-                if (type2 == UNDEFINED && SECONDCHILD(subChild)->label == Arguments && searchSymbol(global, NULL, SECONDCHILD(subChild)->name) != NULL){
+                if (type2 == UNDEFINED && SECONDCHILD(subChild)->label == Arguments && !checkIsFunction(global ,SECONDCHILD(subChild ))){
                     raise_sem_err(UNDECLARED , SECONDCHILD(subChild));
                 }else if(type2 == INT_TYPE && type == CHAR_TYPE){
                     // Case assignement to int variable with a char type value
@@ -492,6 +504,8 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
         } 
         // If current ident node has a child, it may be a function if it has arguments
         if(FIRSTCHILD(node) && FIRSTCHILD(node)->label == Arguments){
+            
+            //Types tmp = selectCorectType(global, local, FIRSTCHILD(node));
             //checkArgument(global, local, FIRSTCHILD(node), nbParamFuncAsso(global, node));       
         }
     }
@@ -503,6 +517,7 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
             if (tmp1->funcNode){
                 raise_sem_err(FUNC_NAME_USED, FIRSTCHILD(node));
             } else {
+
                 // A regler, ne doit pas lire le type d'une fonction
                 Types type2 = selectCorectType(global, local, SECONDCHILD(node));
                 Types type1 = tmp1->type;
@@ -519,6 +534,7 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
             raise_sem_err(UNDECLARED, FIRSTCHILD(node));
         }
     }
+  
     // If current node represents a return, compute checking with function type and return value
     if (node->label == _return_){
         Types retType = VOID_TYPE;

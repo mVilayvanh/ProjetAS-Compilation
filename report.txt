@@ -12,7 +12,7 @@ test/sem-err/err_fun_call_2.tpc : 2
 test/sem-err/err_fun_call_3.tpc : 2
 test/sem-err/err_name_fun_already_decl.tpc : 0
 test/sem-err/err_parameters_1.tpc : 0
-test/sem-err/err_parameters_2.tpc : 0
+test/sem-err/err_parameters_2.tpc : 2
 test/sem-err/err_parameters_3.tpc : 2
 test/sem-err/err_return.tpc : 2
 test/sem-err/err_return_2.tpc : 0

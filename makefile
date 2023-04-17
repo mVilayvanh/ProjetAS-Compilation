@@ -1,6 +1,6 @@
 # Makefile TP Flex et Bison
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 LDFLAGS = -lfl
 EXEC = tpcas
 SRC = ./src/
