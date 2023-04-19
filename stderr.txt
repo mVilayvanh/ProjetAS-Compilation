@@ -1,3 +1,0 @@
-[1;31mError[0m [1;36ml:10[0m: 'z' undeclared (first use in this function)
-Nombre total de tests : 11
-Nombre d'erreurs : 6
