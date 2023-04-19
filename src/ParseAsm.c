@@ -225,11 +225,6 @@ static void searchop(FILE *f, Node *node){
      
 }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
 void writeAsm(SymbolTable * global){
     Node * temp = NULL;
     if (!findMain(global, &temp)){

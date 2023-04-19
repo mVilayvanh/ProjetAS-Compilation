@@ -10,10 +10,6 @@
 #define INIT_CAPACITY 16
 #define MAX 512
 
-#define ERR_REDECLARED 0
-
-#define ERR_UNDECLARED 1
-
 #define ERR_REDEC_VAR "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
  redeclaration of '%s' with no linkage.\n"                          \
 
@@ -47,9 +43,6 @@
 
 #define WARN_CHAR_ASSIGNEMENT "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
  '%s' is a char type but assignement is an int type .\n"            
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 #define WARN_EXPECTING_CHAR "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
  giving int type as argument to a function expecting char type.\n" 
@@ -63,12 +56,6 @@
 #define ERR_MAIN_WRONG_TYPE "\033[1;31mError\033[0m:\
  Main function return type is not int.\n"
 
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
 
 extern int err_flag;
 
@@ -88,19 +75,10 @@ typedef enum err_c {
     FUNC_NAME_USED,
     FUNC_WRONG_USAGE,
     CHAR_ASSIGNEMENT,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     CHAR_EXPECTED,
     RETURN_TOKEN_MISSING,
     NO_MAIN,
     MAIN_WRONG_TYPE,
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
     NO_ERR
 } Err_c;
 

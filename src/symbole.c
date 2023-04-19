@@ -59,9 +59,6 @@ static void raise_sem_err(Err_c code, Node *node) {
         case FUNC_WRONG_USAGE:
             fprintf(stderr, ERR_FUNC_WRONG_USAGE, node->lineno, node->name);
             break;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         case RETURN_TOKEN_MISSING:
             fprintf(stderr, ERR_MISSING_RET_TOKEN, node->lineno);
             break;
@@ -70,18 +67,6 @@ static void raise_sem_err(Err_c code, Node *node) {
             break;
         case MAIN_WRONG_TYPE:
             fprintf(stderr, ERR_MAIN_WRONG_TYPE);
-=======
-        case CHAR_ASSIGNEMENT:
-            fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-        case CHAR_ASSIGNEMENT:
-            fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-        case CHAR_ASSIGNEMENT:
-            fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
->>>>>>> refs/remotes/origin/main
             break;
         default:
             break;
@@ -164,36 +149,12 @@ static int selectType(char *name){
     }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 static int nbParamFuncAsso(SymbolTable *table, char *name){
-=======
-static int nbParamFuncAsso(SymbolTable *table, Node *node){
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-static int nbParamFuncAsso(SymbolTable *table, Node *node){
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-static int nbParamFuncAsso(SymbolTable *table, Node *node){
->>>>>>> refs/remotes/origin/main
     SymbolTable *temp = NULL;
     // Search among functions in global table 
     for(int i = 0 ; i < table->size ; i++){
         // If found in table, gets its number of parameter
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         if(strcmp(table->symbols[i].name, name) == 0){
-=======
-        if(strcmp(table->symbols[i].name, node->name) == 0){
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-        if(strcmp(table->symbols[i].name, node->name) == 0){
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-        if(strcmp(table->symbols[i].name, node->name) == 0){
->>>>>>> refs/remotes/origin/main
             temp =(SymbolTable *)(table->symbols[i].table);
             return temp->nparam;
         }
@@ -217,9 +178,6 @@ static int countArgument(Node * node){
     return i;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 static int checkIsFunction(SymbolTable *global ,Node *node){
     Symbol *tmp;
      if((tmp = searchSymbol(global, NULL, node->name))){
@@ -232,18 +190,6 @@ static int checkIsFunction(SymbolTable *global ,Node *node){
 
 static int checkArgument(SymbolTable *global, SymbolTable *local, SymbolTable *funcTable,
         Node *node, unsigned int nbParam){
-=======
-
-static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-
-static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-
-static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
->>>>>>> refs/remotes/origin/main
     Node *child ,*arguments;
     Symbol *tmp;
     Types type = UNDEFINED;
@@ -256,9 +202,6 @@ static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, un
     }
     arguments = FIRSTCHILD(node);
     
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     for (child = arguments->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
         if (child->label == Ident){
             tmp = searchSymbol(global, local, child->name);
@@ -269,22 +212,6 @@ static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, un
                     // Jsp pour l'instant printf("err recursive\n");
                 }
             }
-=======
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-
-    for (child = arguments->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
-        if (child->label == Ident){
-            tmp = searchSymbol(global, local, child->name);
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
             // Not found
             if (!tmp){
                 raise_sem_err(UNDECLARED, child);
@@ -293,49 +220,16 @@ static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, un
             type = tmp->type;
         } else if (child->label == Num) {
             type = INT_TYPE;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         } else if (child->label == Character) {
             type = CHAR_TYPE;
         }
         
         if (type != UNDEFINED && funcTable->symbols[i].type == CHAR_TYPE && type == INT_TYPE){
             printWarn(CHAR_EXPECTED, child);
-=======
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
         } 
-        
-        
-        if (type != UNDEFINED && local->symbols[i].type != type){
-            raise_sem_err(TYPE_MISMATCH, child, type, local->symbols[i].type);
-            return 1;
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-        }
     }
     if (countArgument(arguments) != nbParam){
         raise_sem_err(FUNC_ARG_NUMBER, node);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        return 1 ;
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-        return 1 ;
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
-        return 1 ;
->>>>>>> refs/remotes/origin/main
     }
     return 0;
 }
@@ -352,30 +246,11 @@ static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *no
         break;
     case Ident:
         tmp = searchSymbol(global, local, node->name);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         if (tmp && tmp->funcNode == NULL){
             res = tmp->type;
         }
         else if (tmp && tmp->funcNode != NULL){
             if(checkArgument(global, local, tmp->table, node, nbParamFuncAsso(global, node->name)) == 0)
-=======
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-        if (tmp && tmp->funcNode == NULL)
-            res = tmp->type;
-        else if (tmp && tmp->funcNode != NULL){
-            if(checkArgument(global, tmp->table, node, nbParamFuncAsso(global, node)) == 0)
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
                 res = tmp->type;
             else
                 res = UNDEFINED;
@@ -395,31 +270,6 @@ static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *no
     return res;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-static int checkIsFunction(SymbolTable *global ,Node *node){
-    Symbol *tmp;
-     if((tmp = searchSymbol(global, NULL, node->name))){
-        if (tmp && tmp->funcNode != NULL){
-            return 1;
-        }
-    }
-    return 0;
-}
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-
 static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
     Node *child = NULL;
     Node *subChild = NULL;
@@ -438,34 +288,13 @@ static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
                 // If current variable is going to be assigned to another
                 type2 = selectCorectType(global, local, SECONDCHILD(subChild));
                 if (type2 == UNDEFINED && SECONDCHILD(subChild)->label == Arguments && !checkIsFunction(global ,SECONDCHILD(subChild ))){
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
                     raise_sem_err(UNDECLARED, SECONDCHILD(subChild));
                 }else if(type2 == INT_TYPE && type == CHAR_TYPE){
                     // Ajouter cas fonction affectée
 
                     // Case assignement to int variable with a char type value
                     printWarn(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
-=======
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-                    raise_sem_err(UNDECLARED , SECONDCHILD(subChild));
-                }else if(type2 == INT_TYPE && type == CHAR_TYPE){
-                    // Case assignement to int variable with a char type value
-                    isWarning = 1;
-                    raise_sem_err(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-                }
-            
+                }            
             } else {
              // Regular variable declaration
                 varNode = subChild;
@@ -502,26 +331,12 @@ static int fillLocalSymbolTable(SymbolTable *global, SymbolTable *table, Node *n
     }
     return 1;
 }
+
 /*
 static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
     Node *func_start = makeNode(DeclFonct);
 }
 */
-
-static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
-    Node *func_start = makeNode(DeclFonct);
-
-}
-
-static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
-    Node *func_start = makeNode(DeclFonct);
-
-}
-
-static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
-    Node *func_start = makeNode(DeclFonct);
-
-}
 
 static int fillGlobalSymbolTable(SymbolTable *table, Node *node){
     // Do not build from null pointer table.
@@ -677,20 +492,8 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
         } 
         // If current ident node has a child, it may be a function if it has arguments
         if(FIRSTCHILD(node) && FIRSTCHILD(node)->label == Arguments){
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
             // Peut y avoir une zone a risque
             selectCorectType(global, local, FIRSTCHILD(node));       
-=======
-=======
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
-=======
->>>>>>> refs/remotes/origin/main
-            
-            //Types tmp = selectCorectType(global, local, FIRSTCHILD(node));
-            //checkArgument(global, local, FIRSTCHILD(node), nbParamFuncAsso(global, node));       
->>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
         }
     }
     if (node->label == Assign){
