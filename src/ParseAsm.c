@@ -203,17 +203,6 @@ static void translateExprToAsm(FILE * f, Node *node){
     }
 }
 
-static int find_Main(const SymbolTable *global, Node **dest ){
-    int i;
-    for (i = 0; i < global->size; i++){
-        if (strcmp(global->symbols[i].name, "main") == 0){
-            (*dest) = global->symbols[i].funcNode;
-            return 1;
-        }
-    }
-    return 0;
-}
-
 static void moveRootToSuitInstr(Node *root){
     root = SECONDCHILD(root);
     if(FIRSTCHILD(root)->label == DeclarVarLoc){
@@ -236,11 +225,14 @@ static void searchop(FILE *f, Node *node){
      
 }
 
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
 void writeAsm(SymbolTable * global){
     Node * temp = NULL;
-    if (!find_Main(global, &temp)){
+    if (!findMain(global, &temp)){
         printf("Erreur : Fonction main non déclarée");
         return;
     } 

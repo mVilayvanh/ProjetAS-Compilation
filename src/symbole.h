@@ -47,6 +47,28 @@
 
 #define WARN_CHAR_ASSIGNEMENT "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
  '%s' is a char type but assignement is an int type .\n"            
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+#define WARN_EXPECTING_CHAR "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
+ giving int type as argument to a function expecting char type.\n" 
+
+#define ERR_MISSING_RET_TOKEN "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ Current function is missing a return and doesnt return void type.\n"
+
+#define ERR_NO_MAIN "\033[1;31mError\033[0m:\
+ Main function not found.\n"
+
+#define ERR_MAIN_WRONG_TYPE "\033[1;31mError\033[0m:\
+ Main function return type is not int.\n"
+
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
 
 extern int err_flag;
 
@@ -60,14 +82,25 @@ typedef enum types{
 typedef enum err_c {
     UNDECLARED,
     REDECLARED,
-    TYPE_MISMATCH,
     RET_WITH_NO_VALUE,
     RET_WITH_VALUE,
-    RET_TYPE_MISMATCH,
     FUNC_ARG_NUMBER,
     FUNC_NAME_USED,
     FUNC_WRONG_USAGE,
     CHAR_ASSIGNEMENT,
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    CHAR_EXPECTED,
+    RETURN_TOKEN_MISSING,
+    NO_MAIN,
+    MAIN_WRONG_TYPE,
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
     NO_ERR
 } Err_c;
 
@@ -75,7 +108,7 @@ typedef struct Symbol{
     char *name;
     Types type;
     void *table;
-    Node * funcNode ;
+    Node *funcNode;
 } Symbol;
 
 typedef struct SymbolTable{
@@ -93,5 +126,7 @@ void freeSymbolTable(SymbolTable **table);
 void printSymbolTable(const SymbolTable *table);
 
 void checkVariableDeclaration(SymbolTable *global ,Node *node);
+
+int findMain(const SymbolTable *global, Node **dest);
 
 #endif

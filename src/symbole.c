@@ -2,15 +2,8 @@
 
 #include <stdarg.h>
 
-static const char * StringFromTypes[] = {
-    "int",
-    "char",
-    "void",
-    "UNDEFINED"
-};
 
 int hasReturn = 0;
-int isWarning = 0;
 
 static Symbol *searchSymbol(SymbolTable *global, SymbolTable *local, char *name){
     int i;
@@ -27,46 +20,32 @@ static Symbol *searchSymbol(SymbolTable *global, SymbolTable *local, char *name)
     return NULL;
 }
 
-static void raise_sem_err(Err_c code, Node *node, ...) {
-    va_list list;
-    int type1, type2;
-    // Print respective message depending on semantic error code
-    if (!isWarning && code != NO_ERR && !err_flag){
-        err_flag = 1;
+static void printWarn(Err_c  code , Node * node , ...){
+    switch (code){
+        case RET_WITH_VALUE:
+            fprintf(stderr, WARN_RET_VOID_MISMATCH, node->lineno);
+            break;
+        case CHAR_ASSIGNEMENT:
+            fprintf(stderr, WARN_CHAR_ASSIGNEMENT, node->lineno, node->name);
+            break;
+        case CHAR_EXPECTED:
+            fprintf(stderr, WARN_EXPECTING_CHAR, node->lineno);
+            break;
+        default:
+            break;
     }
+
+}
+
+static void raise_sem_err(Err_c code, Node *node) {
+    // Print respective message depending on semantic error code
+    err_flag = 1;
     switch (code) {
         case UNDECLARED:
             fprintf(stderr, ERR_UNDEC_VAR, node->lineno, node->name);
             break;
         case REDECLARED:
             fprintf(stderr, ERR_REDEC_VAR, node->lineno, node->name);
-            break;
-        case TYPE_MISMATCH:
-            va_start(list, node);
-            type1 = va_arg(list, int);
-            type2 = va_arg(list, int);
-            fprintf(stderr, ERR_VAR_TYPE_MISMATCH,
-                node->lineno, StringFromTypes[type1],
-                StringFromTypes[type2]);
-            va_end(list);
-            break;
-        case RET_WITH_VALUE:
-            fprintf(stderr, WARN_RET_VOID_MISMATCH, node->lineno);
-            break;
-        case RET_TYPE_MISMATCH:
-            va_start(list, node);
-            type1 = va_arg(list, int);
-            type2 = va_arg(list, int);
-            if (isWarning){
-                fprintf(stderr, WARN_RETURN_MISMATCH,
-                    node->lineno, StringFromTypes[type1],
-                    StringFromTypes[type2]);
-            } else {
-                fprintf(stderr, ERR_RETURN_MISMATCH,
-                    node->lineno, StringFromTypes[type1],
-                    StringFromTypes[type2]);
-            }
-            va_end(list);
             break;
         case RET_WITH_NO_VALUE:
             fprintf(stderr, ERR_RET_VOID_MISMATCH, node->lineno);
@@ -80,14 +59,33 @@ static void raise_sem_err(Err_c code, Node *node, ...) {
         case FUNC_WRONG_USAGE:
             fprintf(stderr, ERR_FUNC_WRONG_USAGE, node->lineno, node->name);
             break;
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        case RETURN_TOKEN_MISSING:
+            fprintf(stderr, ERR_MISSING_RET_TOKEN, node->lineno);
+            break;
+        case NO_MAIN:
+            fprintf(stderr, ERR_NO_MAIN);
+            break;
+        case MAIN_WRONG_TYPE:
+            fprintf(stderr, ERR_MAIN_WRONG_TYPE);
+=======
         case CHAR_ASSIGNEMENT:
             fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+        case CHAR_ASSIGNEMENT:
+            fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+        case CHAR_ASSIGNEMENT:
+            fprintf(stderr, WARN_CHAR_ASSIGNEMENT,node->lineno,node->name);
+>>>>>>> refs/remotes/origin/main
             break;
         default:
             break;
     }
-    if (isWarning)
-        isWarning = 0;
 }
 
 static int initSymbolTable(SymbolTable **dest){
@@ -107,7 +105,6 @@ static int initSymbolTable(SymbolTable **dest){
     for (i = 0; i < INIT_CAPACITY; i++){
         res->symbols[i].table = NULL;
         res->symbols[i].funcNode = NULL;
-        
     }
     res->nparam = 0;
     res->total_bytes = 0 ;
@@ -167,12 +164,36 @@ static int selectType(char *name){
     }
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+static int nbParamFuncAsso(SymbolTable *table, char *name){
+=======
 static int nbParamFuncAsso(SymbolTable *table, Node *node){
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+static int nbParamFuncAsso(SymbolTable *table, Node *node){
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+static int nbParamFuncAsso(SymbolTable *table, Node *node){
+>>>>>>> refs/remotes/origin/main
     SymbolTable *temp = NULL;
     // Search among functions in global table 
     for(int i = 0 ; i < table->size ; i++){
         // If found in table, gets its number of parameter
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        if(strcmp(table->symbols[i].name, name) == 0){
+=======
         if(strcmp(table->symbols[i].name, node->name) == 0){
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+        if(strcmp(table->symbols[i].name, node->name) == 0){
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+        if(strcmp(table->symbols[i].name, node->name) == 0){
+>>>>>>> refs/remotes/origin/main
             temp =(SymbolTable *)(table->symbols[i].table);
             return temp->nparam;
         }
@@ -196,8 +217,33 @@ static int countArgument(Node * node){
     return i;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+static int checkIsFunction(SymbolTable *global ,Node *node){
+    Symbol *tmp;
+     if((tmp = searchSymbol(global, NULL, node->name))){
+        if (tmp && tmp->funcNode != NULL){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int checkArgument(SymbolTable *global, SymbolTable *local, SymbolTable *funcTable,
+        Node *node, unsigned int nbParam){
+=======
 
 static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+
+static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+
+static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, unsigned int nbParam){
+>>>>>>> refs/remotes/origin/main
     Node *child ,*arguments;
     Symbol *tmp;
     Types type = UNDEFINED;
@@ -210,10 +256,35 @@ static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, un
     }
     arguments = FIRSTCHILD(node);
     
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    for (child = arguments->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
+        if (child->label == Ident){
+            tmp = searchSymbol(global, local, child->name);
+            // is function
+            if (tmp && tmp->funcNode) {
+                int err = checkArgument(global, local, tmp->table, child, nbParamFuncAsso(global, tmp->name));
+                if (err){
+                    // Jsp pour l'instant printf("err recursive\n");
+                }
+            }
+=======
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
 
     for (child = arguments->firstChild; child != NULL && i < nbParam; child = child->nextSibling , i++){
         if (child->label == Ident){
             tmp = searchSymbol(global, local, child->name);
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
             // Not found
             if (!tmp){
                 raise_sem_err(UNDECLARED, child);
@@ -222,17 +293,49 @@ static int checkArgument(SymbolTable *global, SymbolTable *local, Node *node, un
             type = tmp->type;
         } else if (child->label == Num) {
             type = INT_TYPE;
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        } else if (child->label == Character) {
+            type = CHAR_TYPE;
+        }
+        
+        if (type != UNDEFINED && funcTable->symbols[i].type == CHAR_TYPE && type == INT_TYPE){
+            printWarn(CHAR_EXPECTED, child);
+=======
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
         } 
         
         
         if (type != UNDEFINED && local->symbols[i].type != type){
             raise_sem_err(TYPE_MISMATCH, child, type, local->symbols[i].type);
             return 1;
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
         }
     }
     if (countArgument(arguments) != nbParam){
         raise_sem_err(FUNC_ARG_NUMBER, node);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
         return 1 ;
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+        return 1 ;
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+        return 1 ;
+>>>>>>> refs/remotes/origin/main
     }
     return 0;
 }
@@ -249,10 +352,30 @@ static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *no
         break;
     case Ident:
         tmp = searchSymbol(global, local, node->name);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        if (tmp && tmp->funcNode == NULL){
+            res = tmp->type;
+        }
+        else if (tmp && tmp->funcNode != NULL){
+            if(checkArgument(global, local, tmp->table, node, nbParamFuncAsso(global, node->name)) == 0)
+=======
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
         if (tmp && tmp->funcNode == NULL)
             res = tmp->type;
         else if (tmp && tmp->funcNode != NULL){
             if(checkArgument(global, tmp->table, node, nbParamFuncAsso(global, node)) == 0)
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
                 res = tmp->type;
             else
                 res = UNDEFINED;
@@ -272,6 +395,14 @@ static Types selectCorectType(SymbolTable *global, SymbolTable *local , Node *no
     return res;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
 static int checkIsFunction(SymbolTable *global ,Node *node){
     Symbol *tmp;
      if((tmp = searchSymbol(global, NULL, node->name))){
@@ -281,6 +412,13 @@ static int checkIsFunction(SymbolTable *global ,Node *node){
     }
     return 0;
 }
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
 
 static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
     Node *child = NULL;
@@ -300,11 +438,32 @@ static int addVariable(SymbolTable *global, SymbolTable *local, Node *node){
                 // If current variable is going to be assigned to another
                 type2 = selectCorectType(global, local, SECONDCHILD(subChild));
                 if (type2 == UNDEFINED && SECONDCHILD(subChild)->label == Arguments && !checkIsFunction(global ,SECONDCHILD(subChild ))){
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+                    raise_sem_err(UNDECLARED, SECONDCHILD(subChild));
+                }else if(type2 == INT_TYPE && type == CHAR_TYPE){
+                    // Ajouter cas fonction affectée
+
+                    // Case assignement to int variable with a char type value
+                    printWarn(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
+=======
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
                     raise_sem_err(UNDECLARED , SECONDCHILD(subChild));
                 }else if(type2 == INT_TYPE && type == CHAR_TYPE){
                     // Case assignement to int variable with a char type value
                     isWarning = 1;
                     raise_sem_err(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
                 }
             
             } else {
@@ -332,15 +491,31 @@ static int fillLocalSymbolTable(SymbolTable *global, SymbolTable *table, Node *n
     if (strcmp("void", FIRSTCHILD(temp)->name) != 0){
         addVariable(global, table, temp);
     }
-    // Move to function's body
-    temp = SECONDCHILD(node);
-    // Get local variable nodes
-    if (FIRSTCHILD(temp)->label == DeclarVarLoc) {
-        // Fill table from variable declaration
-        addVariable(global, table, FIRSTCHILD(temp));
+    // Move to function's body if exists
+    if (SECONDCHILD(node)) {
+        temp = SECONDCHILD(node);
+        // Get local variable nodes
+        if (FIRSTCHILD(temp)->label == DeclarVarLoc) {
+            // Fill table from variable declaration
+            addVariable(global, table, FIRSTCHILD(temp));
+        }
     }
-
     return 1;
+}
+/*
+static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
+    Node *func_start = makeNode(DeclFonct);
+}
+*/
+
+static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
+    Node *func_start = makeNode(DeclFonct);
+
+}
+
+static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
+    Node *func_start = makeNode(DeclFonct);
+
 }
 
 static void addGetFunc(SymbolTable *global, Types retval, Types parameter_t){
@@ -373,7 +548,7 @@ static int fillGlobalSymbolTable(SymbolTable *table, Node *node){
         if(!fillLocalSymbolTable(table, temp, child)){
             return 0;
         }
-         if ((type = selectType(FIRSTCHILD(FIRSTCHILD(child))->name)) == UNDEFINED){
+        if ((type = selectType(FIRSTCHILD(FIRSTCHILD(child))->name)) == UNDEFINED){
             return 0;
         }
         if (!addSymbol(table, SECONDCHILD(FIRSTCHILD(child))->name, type, temp, child)){
@@ -448,9 +623,9 @@ static Err_c matchingReturnValue(Types retval, Node *node,
                     *err = tmp->type;
                 else
                     return UNDECLARED;
-                return TYPE_MISMATCH;
-            } 
-            return RET_WITH_VALUE;
+                return RET_WITH_VALUE;
+            }
+            return RET_WITH_VALUE; 
         } else {
             return NO_ERR;
         }
@@ -471,8 +646,7 @@ static Err_c matchingReturnValue(Types retval, Node *node,
         if (FIRSTCHILD(node)){
             if (FIRSTCHILD(node)->label == Num){
                 *err = INT_TYPE;
-                isWarning = 1;
-                return RET_TYPE_MISMATCH;
+                return CHAR_ASSIGNEMENT;
             } else if (FIRSTCHILD(node)->label == Ident){
                 tmp = searchSymbol(global, local, FIRSTCHILD(node)->name);
                 if (tmp){
@@ -482,13 +656,12 @@ static Err_c matchingReturnValue(Types retval, Node *node,
                 }
                 if (*err == INT_TYPE){
                     *err = INT_TYPE;
-                    isWarning = 1;
-                    return RET_TYPE_MISMATCH;
+                    return CHAR_ASSIGNEMENT;
                 } else {
                     return NO_ERR;
                 }
             } else {
-                return NO_ERR;
+                return RET_WITH_NO_VALUE;
             }
         } else {
             return RET_WITH_NO_VALUE;
@@ -500,13 +673,24 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
     if(node->label == Ident){
         // Check if current ident node is declared in local table
         if(searchSymbol(global, local, node->name) == 0){
-            raise_sem_err(UNDECLARED, node);
+            //raise_sem_err(UNDECLARED, node);
         } 
         // If current ident node has a child, it may be a function if it has arguments
         if(FIRSTCHILD(node) && FIRSTCHILD(node)->label == Arguments){
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+            // Peut y avoir une zone a risque
+            selectCorectType(global, local, FIRSTCHILD(node));       
+=======
+=======
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
+=======
+>>>>>>> refs/remotes/origin/main
             
             //Types tmp = selectCorectType(global, local, FIRSTCHILD(node));
             //checkArgument(global, local, FIRSTCHILD(node), nbParamFuncAsso(global, node));       
+>>>>>>> 82b3b8dc07cd90319611d8be40d68e9f7432c49e
         }
     }
     if (node->label == Assign){
@@ -522,11 +706,9 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
                 Types type2 = selectCorectType(global, local, SECONDCHILD(node));
                 Types type1 = tmp1->type;
                 if (type1 != type2 && type1 != UNDEFINED && type2 != UNDEFINED){
-                    // Case assignement to int variable with a char type value
-                    if (!(type1 == INT_TYPE && type2 == CHAR_TYPE)){    
-                        fprintf(stderr, ERR_VAR_TYPE_MISMATCH,
-                            node->lineno, StringFromTypes[type2],
-                            StringFromTypes[type1]);
+                    // Case assignement to int variable with a char type value    
+                    if (type1 == CHAR_TYPE && type2 == INT_TYPE){
+                        printWarn(CHAR_ASSIGNEMENT, node);
                     }
                 }
             }
@@ -541,8 +723,13 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
         Err_c err = matchingReturnValue(funcRetType, node, global, local, &retType);
         if (err == UNDECLARED){
             raise_sem_err(UNDECLARED, FIRSTCHILD(node));
-        } else {
-            raise_sem_err(err, node, retType, funcRetType);
+        } else if (err == RET_WITH_VALUE) {
+            printWarn(err, node);
+        } else if (err != NO_ERR) {
+            raise_sem_err(err, node);
+        }
+        if (err == NO_ERR || (err == RET_WITH_NO_VALUE && funcRetType == VOID_TYPE) || err == RET_WITH_VALUE) {
+            hasReturn = 1;
         }
     }
 }
@@ -559,6 +746,9 @@ static void variableInBody(SymbolTable *global, SymbolTable *local, Node *node, 
 static Node * moveToBody(Node *node){
     // From declfunct to body
     Node *tmp = node;
+    if (!SECONDCHILD(node)) {
+        return NULL;
+    }
     tmp = SECONDCHILD(tmp);
     if(FIRSTCHILD(tmp)->label == DeclarVarLoc){
         return SECONDCHILD(tmp);
@@ -567,20 +757,50 @@ static Node * moveToBody(Node *node){
     }
 }
 
+int findMain(const SymbolTable *global, Node **dest){
+    int i;
+    for (i = 0; i < global->size; i++){
+        if (strcmp(global->symbols[i].name, "main") == 0 && global->symbols[i].funcNode){
+            (*dest) = global->symbols[i].funcNode;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void checkMainState(const SymbolTable *global, Node **dest) {
+    int found;
+    if (!(found = findMain(global, dest))){
+        raise_sem_err(NO_MAIN, NULL);
+    }
+    if (found){
+        char *type = FIRSTCHILD(FIRSTCHILD((*dest)))->name;
+        if (selectType(type) != INT_TYPE){
+            raise_sem_err(MAIN_WRONG_TYPE, NULL);
+        }
+    }
+}
+
 void checkVariableDeclaration(SymbolTable *global, Node *node){
     // Compute checking for each local function declared
     Symbol *funcSym = NULL;
+    Node *dummy, *body = NULL;
     Types rettype = UNDEFINED;
     for (int i = 0; i < global->size; i++){
         if(global->symbols[i].table != NULL){
+            hasReturn = 0;
             funcSym = &global->symbols[i];
             rettype = funcSym->type;
-            Node *body = moveToBody(funcSym->funcNode);
+            body = moveToBody(funcSym->funcNode);
             if (body){
                 variableInBody(global, funcSym->table, body, rettype);
             }
+            if (!hasReturn && rettype != VOID_TYPE && body){
+                raise_sem_err(RETURN_TOKEN_MISSING, body);
+            }
         }
-    }   
+    }
+    checkMainState(global, &dummy);
 }
 
 int buildSymTables(SymbolTable **dest, Node *root){
@@ -598,5 +818,4 @@ int buildSymTables(SymbolTable **dest, Node *root){
     *dest = res;
     return 1;
 }
-
 
