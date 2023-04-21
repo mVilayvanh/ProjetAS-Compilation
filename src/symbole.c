@@ -2,21 +2,24 @@
 
 #include <stdarg.h>
 
-
 int hasReturn = 0;
 
 static Symbol *searchSymbol(SymbolTable *global, SymbolTable *local, char *name){
     int i;
-    for (i = 0; i < local->size; i++){
-        if (strcmp(local->symbols[i].name, name) == 0){
-            return &(local->symbols[i]);
+    if (local) {
+        for (i = 0; i < local->size; i++){
+            if (strcmp(local->symbols[i].name, name) == 0){
+                return &(local->symbols[i]);
+            }
         }
     }
-    for (i = 0; i < global->size; i++){
-        if (strcmp(global->symbols[i].name, name) == 0){
-            return &(global->symbols[i]);
-        }
-    } 
+    if (global) {
+        for (i = 0; i < global->size; i++){
+            if (strcmp(global->symbols[i].name, name) == 0){
+                return &(global->symbols[i]);
+            }
+        } 
+    }
     return NULL;
 }
 
@@ -486,14 +489,17 @@ static Err_c matchingReturnValue(Types retval, Node *node,
 
 static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *node, Types funcRetType){
     if(node->label == Ident){
+        Symbol *tmp;
         // Check if current ident node is declared in local table
-        if(searchSymbol(global, local, node->name) == 0){
+        tmp = searchSymbol(global, local, node->name);
+        if (!tmp) {
             //raise_sem_err(UNDECLARED, node);
-        } 
-        // If current ident node has a child, it may be a function if it has arguments
-        if(FIRSTCHILD(node) && FIRSTCHILD(node)->label == Arguments){
-            // Peut y avoir une zone a risque
-            selectCorectType(global, local, FIRSTCHILD(node));       
+        } else {
+            // If current ident node has a child, it may be a function if it has arguments
+            if(FIRSTCHILD(node) && FIRSTCHILD(node)->label == Arguments){
+                // Peut y avoir une zone a risque
+                selectCorectType(global, local, FIRSTCHILD(node));       
+            }
         }
     }
     if (node->label == Assign){
