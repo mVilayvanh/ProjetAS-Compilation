@@ -61,7 +61,6 @@ void addSibling(Node *node, Node *sibling);
 void addChild(Node *parent, Node *child);
 void deleteTree(Node*node);
 void printTree(Node *node);
-void searchNode(Node *from, label_t target, Node **res);
 int isOperand(Node *node);
 int isOrderOrEqual(Node *node);
 

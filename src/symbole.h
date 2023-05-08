@@ -25,7 +25,7 @@
 #define WARN_RETURN_MISMATCH "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
  returning '%s' from a function with return type '%s'.\n"                    \
 
-#define WARN_RET_VOID_MISMATCH "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
+#define ERR_RET_VALUE_MISMATCH "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
  return with a value, in function returning void.\n"                           \
                                                                                \
 
@@ -56,6 +56,17 @@
 #define ERR_MAIN_WRONG_TYPE "\033[1;31mError\033[0m:\
  Main function return type is not int.\n"
 
+#define ERR_VAR_AS_FUNC_CALL "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ calling '%s' while not a function.\n" 
+
+#define ERR_VOID_TYPE_AS_ARGUMENT "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ calling '%s' is a function returning void. It cannot be given as an argument.\n" 
+
+#define ERR_VOID_TYPE_AS_OPERAND "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ calling '%s' is a function returning void. It cannot be used as an operand.\n" 
+
+#define ERR_VOID_TYPE_AS_RETVAL "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ calling '%s' is a function returning void. It cannot be used as return value.\n" 
 
 extern int err_flag;
 
@@ -74,13 +85,23 @@ typedef enum err_c {
     FUNC_ARG_NUMBER,
     FUNC_NAME_USED,
     FUNC_WRONG_USAGE,
+    VAR_AS_FUNC_CALL,
     CHAR_ASSIGNEMENT,
     CHAR_EXPECTED,
     RETURN_TOKEN_MISSING,
     NO_MAIN,
     MAIN_WRONG_TYPE,
+    VOID_TYPE_ARGUMENT,
+    VOID_TYPE_AS_OPERAND,
+    VOID_TYPE_AS_RETVAL,
     NO_ERR
 } Err_c;
+
+typedef enum sym_scope {
+    LOCAL,
+    GLOBAL,
+    NOT_SYM
+} Sym_scope;
 
 typedef struct Symbol{
     char *name;

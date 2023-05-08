@@ -7,6 +7,7 @@
 
 extern int tree_flag;
 extern int help_flag;
+extern int sym_flag;
 
 int read_option(int argc, char *argv[]);
 

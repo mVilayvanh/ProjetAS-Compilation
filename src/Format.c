@@ -5,16 +5,20 @@ int read_option(int argc, char *argv[]){
     static struct option long_options[] = {
           {"help", no_argument, 0, 'h'},
           {"tree", no_argument, 0, 't'},
+          {"symbol", no_argument, 0, 's'},
           {0, 0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "ht", long_options, &opt_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hts", long_options, &opt_index)) != -1) {
         switch (opt) {
             case 't':
                 tree_flag = 1;
                 break;
             case 'h':
                 help_flag = 1;
+                break;
+            case 's':
+                sym_flag = 1;
                 break;
             default:
                 fprintf(stderr, "Usage : %s [OPTIONS] [file.tpc]\n",

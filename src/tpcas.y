@@ -20,6 +20,7 @@ char name[64];
 
 int help_flag = 0;
 int tree_flag = 0;
+int sym_flag = 0;
 int varGlob_flag = 0;
 int varLoc_flag = 0;
 int suiteInstr_flag = 0;
@@ -63,7 +64,9 @@ Prog:  DeclarVarGlob DeclFoncts {
                                     if (tree_flag){
                                         printTree($$);
                                     }
-                                    //printSymbolTable(table);
+                                    if (sym_flag){
+                                        printSymbolTable(table);
+                                    }
                                     // Construction code assembleur
                                     //writeAsm(table);
                                     freeSymbolTable(&table);
