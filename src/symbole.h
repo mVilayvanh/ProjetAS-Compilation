@@ -118,14 +118,12 @@ typedef struct SymbolTable{
     unsigned int total_bytes;
 } SymbolTable;
 
-int buildSymTables(SymbolTable **dest, Node *root);
+int build_sym_tables(SymbolTable **dest, Node *root);
 
-void freeSymbolTable(SymbolTable **table);
+void free_sym_table(SymbolTable **table);
 
-void printSymbolTable(const SymbolTable *table);
+void print_symbol_table(const SymbolTable *table);
 
-void checkVariableDeclaration(SymbolTable *global ,Node *node);
-
-int findMain(const SymbolTable *global, Node **dest);
+int find_main(const SymbolTable *global, Node **dest);
 
 #endif

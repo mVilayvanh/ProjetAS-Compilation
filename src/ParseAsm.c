@@ -227,7 +227,7 @@ static void searchop(FILE *f, Node *node){
 
 void writeAsm(SymbolTable * global){
     Node * temp = NULL;
-    if (!findMain(global, &temp)){
+    if (!find_main(global, &temp)){
         printf("Erreur : Fonction main non déclarée");
         return;
     } 

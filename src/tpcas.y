@@ -60,16 +60,16 @@ Prog:  DeclarVarGlob DeclFoncts {
                                         addChild($$, $2);
                                     }
                                     // Construction table des symboles
-                                    buildSymTables(&table, $$);
+                                    build_sym_tables(&table, $$);
                                     if (tree_flag){
                                         printTree($$);
                                     }
                                     if (sym_flag){
-                                        printSymbolTable(table);
+                                        print_symbol_table(table);
                                     }
                                     // Construction code assembleur
                                     //writeAsm(table);
-                                    freeSymbolTable(&table);
+                                    free_sym_table(&table);
                                     deleteTree($$);
                                 }
     ;
