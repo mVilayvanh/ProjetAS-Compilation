@@ -9,6 +9,6 @@
 
 #define BUFFERSIZE 2048
 
-void writeAsm(SymbolTable * global );
+void write_Asm(SymbolTable *global);
 
 #endif

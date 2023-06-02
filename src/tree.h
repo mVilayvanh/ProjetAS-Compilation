@@ -49,7 +49,6 @@ typedef struct Node {
     label_t label;
     int val;
     int lineno;
-    int visited;
     char *name;
     struct Node *firstChild, *nextSibling;
 } Node;

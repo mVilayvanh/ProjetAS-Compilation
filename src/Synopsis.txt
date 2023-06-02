@@ -1,6 +1,6 @@
 SYNOPSIS:
 
-Usage ./tpcas [-options] [file]
+Usage ./tpcc [-options] [file]
 
 tpcas is a syntaxical analyser based on C. It is a sub language that
 implements primitive type int and char from C language.
@@ -12,7 +12,7 @@ If a file is located in another sub directory (exemple here with executable
 being in bin directory and tests being in test directory containing sub directories)
 We have to use .. to be in the upper level and then go down to the correct file
 
-./tpcas ../test/good/test3.tpc
+./tpcc ../test/good/test3.tpc
 
 OPTIONS:
 
@@ -24,5 +24,5 @@ OPTIONS:
 -h, --help :
     helps using this program easier. You can learn how to execute it.
 
-Version 0.1
+Version 1.8
 Autors: VILAYVANH Mickael & TAGNAN Daren

@@ -2,10 +2,10 @@
 
 #include <stdarg.h>
 
-
 int hasReturn = 0;
+Sym_scope instance = GLOBAL;
 
-static Symbol *search_symbol(SymbolTable *global, SymbolTable *local, char *name, int *index,
+Symbol *search_symbol(SymbolTable *global, SymbolTable *local, char *name, int *index,
         Sym_scope *scope){
     int i;
     for (i = local->size - 1; i >= 0; i--){
@@ -57,7 +57,6 @@ static void print_warn(Err_c  code , Node * node , ...){
         default:
             break;
     }
-
 }
 
 static void raise_sem_err(Err_c code, Node *node) {
@@ -158,13 +157,13 @@ static int init_sym_table(SymbolTable **dest){
     return 1;
 }
 
-static void add_bytes(SymbolTable *table, Types type) {
-    switch (type) {
-        case INT_TYPE:
+static void add_bytes(SymbolTable *table) {
+    switch (instance) {
+        case GLOBAL:
             table->total_bytes += 4;
             break;
-        case CHAR_TYPE :
-            table->total_bytes++;
+        case LOCAL:
+            table->total_bytes += 8;
             break;       
         default:
             break;
@@ -192,7 +191,7 @@ static int add_symbol(SymbolTable *table, char *name, Types type, SymbolTable *p
         table->symbols[table->size].table = ptr;
         table-> symbols[table->size].funcNode = funcNode;
     } else {
-        add_bytes(table, type);
+        add_bytes(table);
     }
     table->size++;
     return 1;
@@ -210,7 +209,7 @@ static int select_type(char *name){
     }
 }
 
-static int nb_param_of_function(SymbolTable *table, char *name){
+int nb_param_of_function(SymbolTable *table, char *name){
     SymbolTable *temp = NULL;
     // Search among functions in global table 
     for(int i = 0 ; i < table->size ; i++){
@@ -362,7 +361,7 @@ static int add_variable(SymbolTable *global, SymbolTable *local, Node *node){
             if (!add_symbol(local, varNode->name, type, NULL,NULL)){
                 raise_sem_err(REDECLARED, varNode);
             }
-            if(node->label == Parametres){
+            if(node->label == Parametres || node->label == DeclarVarGlob){
                 local->nparam++;
             }
         }
@@ -450,6 +449,22 @@ static void add_predefined_functions(SymbolTable * global){
     add_symbol(global, "getchar", CHAR_TYPE, tmp4, build_tree("getchar", CHAR_TYPE, VOID_TYPE));
 }
 
+static void set_sym_reladdr(SymbolTable *table){
+    int i, start;
+    if (table->size > 0){
+        if (instance == GLOBAL){
+            for (i = table->nparam - 1; i >= 0; i--){
+                table->symbols[i].reladdr = table->total_bytes - i * 4 - 4;
+            }
+        } else if (instance == LOCAL) {
+            start = table->nparam;
+            for (i = start; i < table->size; i++){
+                table->symbols[i].reladdr = (i - start) * 8 + 8;
+            }
+        }
+    }
+}
+
 static int fill_global_sym_table(SymbolTable *table, Node *node){
     // Do not build from null pointer table.
     if (!table){
@@ -470,13 +485,16 @@ static int fill_global_sym_table(SymbolTable *table, Node *node){
     }
     // Adding getint putchar
     add_predefined_functions(table);
+    set_sym_reladdr(table);
     // Case no function declared isnt possible (Invalid program in case of no function declared)
     // Search among all existing functions
+    instance = LOCAL;
     for (child = FIRSTCHILD(child); child != NULL; child = child->nextSibling){
         init_sym_table(&temp);
         if(!fill_local_sym_table(table, temp, child)){
             return 0;
         }
+        set_sym_reladdr(temp);
         if ((type = select_type(FIRSTCHILD(FIRSTCHILD(child))->name)) == UNDEFINED){
             return 0;
         }
@@ -517,9 +535,9 @@ void print_symbol_table(const SymbolTable *table){
     }
     printf("=========== TABLE ==========\n");
     for (i = 0; i < table->size; i++){
-        printf("type: %d | name: %s | table %p\n",
+        printf("type: %d | name: %s | table %p | reladdr: %d\n",
             table->symbols[i].type, table->symbols[i].name,
-            table->symbols[i].table);
+            table->symbols[i].table, table->symbols[i].reladdr);
         if (table->symbols[i].table){
             name[j] = table->symbols[i].name;
             array[j] = table->symbols[i].table;

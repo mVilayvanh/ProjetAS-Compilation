@@ -30,7 +30,6 @@ Node *makeNode(label_t label) {
     node->name = NULL;
     node-> firstChild = node->nextSibling = NULL;
     node->lineno = 0;
-    node->visited = 0;
     node->isnum = 0;
     node->lineno = lineno;
     return node;

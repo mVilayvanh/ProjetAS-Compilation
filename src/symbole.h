@@ -108,6 +108,7 @@ typedef struct Symbol{
     Types type;
     void *table;
     Node *funcNode;
+    int reladdr;
 } Symbol;
 
 typedef struct SymbolTable{
@@ -125,5 +126,10 @@ void free_sym_table(SymbolTable **table);
 void print_symbol_table(const SymbolTable *table);
 
 int find_main(const SymbolTable *global, Node **dest);
+
+Symbol *search_symbol(SymbolTable *global, SymbolTable *local, char *name, int *index,
+        Sym_scope *scope);
+
+int nb_param_of_function(SymbolTable *table, char *name);
 
 #endif
