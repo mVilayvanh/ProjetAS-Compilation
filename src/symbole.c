@@ -3,6 +3,7 @@
 #include <stdarg.h>
 
 int hasReturn = 0;
+int voidOperand = 0;
 Sym_scope instance = GLOBAL;
 
 Symbol *search_symbol(SymbolTable *global, SymbolTable *local, char *name, int *index,
@@ -105,6 +106,8 @@ static void raise_sem_err(Err_c code, Node *node) {
         case VOID_TYPE_AS_RETVAL:
             fprintf(stderr, ERR_VOID_TYPE_AS_RETVAL, node->lineno, node->name);
             break;
+        case VOID_TYPE_AS_ASSIGNEMENT:
+            fprintf(stderr, ERR_VOID_TYPE_AS_ASSIGNEMENT, node->lineno, node->name);
         default:
             break;
     }
@@ -121,8 +124,8 @@ static void checking_operand_format(SymbolTable *global, SymbolTable *local, Nod
                 if (retval){
                     *retval = 1;
                 }
-            }
-            if (sym->type == VOID_TYPE){
+            } else if (sym->type == VOID_TYPE){
+                voidOperand = 1;
                 raise_sem_err(VOID_TYPE_AS_OPERAND, cur);
                 if (retval){
                     *retval = 1;
@@ -298,6 +301,7 @@ static int check_argument(SymbolTable *global, SymbolTable *local, SymbolTable *
 static Types select_correct_type(SymbolTable *global, SymbolTable *local , Node *node){
     Types res = UNDEFINED;
     Symbol *tmp;
+    int err;
     switch (node->label){
     case Num:
         res = INT_TYPE;
@@ -315,15 +319,26 @@ static Types select_correct_type(SymbolTable *global, SymbolTable *local , Node 
                 res = tmp->type;
             else
                 res = UNDEFINED;
-        }else
+        }else {
             res = UNDEFINED;
+        }
         break;
 
-    case Addsub :
-        res = INT_TYPE;
+    case Addsub:
+        checking_operand_format(global, local, node, &err);
+        if (err){
+            res = UNDEFINED;
+        } else {
+            res = INT_TYPE;
+        }
         break;
-    case Divstar :
-        res = INT_TYPE;
+    case Divstar:
+        checking_operand_format(global, local, node, &err);
+        if (err){
+            res = UNDEFINED;
+        } else {
+            res = INT_TYPE;
+        }
         break;
     default:
         break;
@@ -348,11 +363,17 @@ static int add_variable(SymbolTable *global, SymbolTable *local, Node *node){
                 varNode = FIRSTCHILD(subChild);
                 // If current variable is going to be assigned to another
                 type2 = select_correct_type(global, local, SECONDCHILD(subChild));
+                if (type2 == VOID_TYPE){
+                    raise_sem_err(VOID_TYPE_AS_ASSIGNEMENT, SECONDCHILD(subChild));
+                }
                 if (type2 == UNDEFINED && SECONDCHILD(subChild)->label == Ident){
                     raise_sem_err(UNDECLARED, SECONDCHILD(subChild));
-                } else if (type2 == INT_TYPE && type == CHAR_TYPE){
+                } 
+                if (type2 == INT_TYPE && type == CHAR_TYPE && !voidOperand){
                     // Case assignement to int variable with a char type value
                     print_warn(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
+                } else {
+                    voidOperand = 0;
                 }            
             } else {
              // Regular variable declaration
@@ -650,9 +671,9 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
         // Check if current ident node is declared in local table
         if(!(sym = search_symbol(global, local, node->name, &index, &scope))){
             raise_sem_err(UNDECLARED, node);
-        }
+        } 
         // If current ident node has a child, it may be a function if it has arguments
-        if ((err = checking_ident_format(global, local, node, sym, index, scope)) != NO_ERR){
+        else if ((err = checking_ident_format(global, local, node, sym, index, scope)) != NO_ERR){
             raise_sem_err(err, node);
         }
     }
@@ -664,17 +685,15 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
             if (tmp1->funcNode){
                 raise_sem_err(FUNC_NAME_USED, FIRSTCHILD(node));
             } else {
-                // A regler, ne doit pas lire le type d'une fonction
                 Types type2 = select_correct_type(global, local, SECONDCHILD(node));
                 Types type1 = tmp1->type;
                 if (type2 == VOID_TYPE || type1 == VOID_TYPE){
-                    raise_sem_err(VOID_TYPE_AS_OPERAND, node);
+                    raise_sem_err(VOID_TYPE_AS_ASSIGNEMENT, SECONDCHILD(node));
                 } else {
-                    if (type1 != type2 && type1 != UNDEFINED && type2 != UNDEFINED){
-                        // Case assignement to int variable with a char type value    
-                        if (type1 == CHAR_TYPE && type2 == INT_TYPE){
-                            print_warn(CHAR_ASSIGNEMENT, node);
-                        }
+                    if (type2 == UNDEFINED && SECONDCHILD(node)->label == Ident){
+                        raise_sem_err(UNDECLARED, SECONDCHILD(node));
+                    } else if (type1 == CHAR_TYPE && type2 == INT_TYPE){
+                        print_warn(CHAR_ASSIGNEMENT, FIRSTCHILD(node));
                     }
                 }
             }

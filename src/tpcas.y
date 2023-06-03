@@ -431,11 +431,11 @@ int main(int argc, char *argv[]){
     int retval;
     if (read_option(argc, argv) == 1){
         fprintf(stderr, "option do not exists\n");
-        return 2;
+        return 3;
     }
     if (help_flag){
         print_synopsis();
-        return 2;
+        return 3;
     }
     if (argc > 1 && !last_is_option(argc, argv)){
         freopen(argv[argc - 1], "r", stdin);

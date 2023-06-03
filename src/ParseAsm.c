@@ -1,9 +1,9 @@
 #include "ParseAsm.h"
 #include <stdarg.h>
 
-static int labelcount  = 0;
-static int npush = 0;
-int finalfway;
+int labelcount = 0;
+int hasElse = 0;
+int npush = 0;
 char buffer[BUFFERSIZE] = "";
 char *funcName = NULL;
 
@@ -11,6 +11,7 @@ static void write_if(FILE * f , Node *node,SymbolTable * global , SymbolTable * 
 static void write_function_call(FILE *f, Node *node, SymbolTable *global, SymbolTable *local);
 static void translate_body(FILE *f, Node *node, SymbolTable *global, SymbolTable *local);
 static void write_bool_token(FILE *f, Node *node, SymbolTable *global, SymbolTable *local ,int tway , int fway);
+static void translate_Expr_To_Asm(FILE * f, Node *node, SymbolTable *global, SymbolTable *local);
 
 /**
  * Writes a string to the output buffer.
@@ -57,8 +58,11 @@ static void get_var_addr(FILE *f, Node *node, SymbolTable *global, SymbolTable *
         write_on_buffer(f, "%d\n", FIRSTCHILD(node)->val);
     } else if (node->label == Character){
         write_on_buffer(f, "\tmov rax, %s\n", node->name);
+    } else if (isOperand(node)){
+        translate_Expr_To_Asm(f, node, global, local);
+        write_on_buffer(f, "\tpop rax\n");
+        npush--;
     }
-    //write_on_buffer(f, "\tpush rax\n");
 }
 
 /**
@@ -112,7 +116,7 @@ static void write_return(FILE * f, Node *node, SymbolTable *global, SymbolTable 
     if (strcmp(funcName, "main") == 0){
         write_on_buffer(f, "\tmov rdi, rax\n\tmov rax, 60\n\tsyscall\n");
     } else {
-        write_on_buffer(f, "\tret\n");
+        write_on_buffer(f, "\tmov rsp, rbp\n\tpop rbp\n\tret\n");
     }
 }
 
@@ -285,14 +289,14 @@ static void write_order(FILE * f , Node * node, SymbolTable *global, SymbolTable
 }
 
 static void write_and(FILE * f , Node *node, SymbolTable * global , SymbolTable * local,int tway , int fway){
-    int ttemp = ++labelcount;
+    int ttemp = labelcount++;
     write_bool_token(f,FIRSTCHILD(node),global,local,ttemp,fway);
     write_on_buffer(f,"\tjmp .E%d\n.E%d:\n",fway , ttemp);
     write_bool_token(f,SECONDCHILD(node),global,local,tway,fway);
 }
 
 static void write_or(FILE * f , Node *node, SymbolTable * global , SymbolTable * local, int tway , int fway){
-    int ftemp = ++labelcount;
+    int ftemp = labelcount++;
     write_bool_token(f,FIRSTCHILD(node),global,local,tway ,ftemp);
     write_on_buffer(f,"\tjmp .E%d\n.E%d:\n",ftemp, ftemp);
     write_bool_token(f,SECONDCHILD(node),global,local,tway,fway);
@@ -359,27 +363,47 @@ static void write_bool_token(FILE *f, Node *node, SymbolTable *global, SymbolTab
             break;
         case or:
             write_or(f, node,global,local,tway,fway);
-            break;      
+            break;
         default:
+            get_var_addr(f, node, global, local);
+            write_on_buffer(f, "\tcmp rax, 0\n");
+            write_on_buffer(f, "\tjne .E%d\n", tway);
             break;
     }
 }
 
-static void write_if(FILE * f , Node *node,SymbolTable * global , SymbolTable * local ){
-    int tway = labelcount;
-    int fway = ++labelcount;
-    finalfway = fway;
+static void write_if(FILE * f , Node *node,SymbolTable * global , SymbolTable * local){
+    int tway = labelcount++;
+    int fway = labelcount++;
+    int temp = fway;
     write_bool_token(f,FIRSTCHILD(node),global,local,tway,fway);
-    write_on_buffer(f,"\tjmp .E%d\n",fway);
     Node * node_else  = node->nextSibling;
-
+    // Translation of if statement
+    // Translation of else statement if exists
     if(node_else != NULL  && node_else->label == _else_){
-        write_expr(f,FIRSTCHILD(node_else),global,local);
-        translate_body(f,FIRSTCHILD(node),global,local);
+        hasElse = 1;
+        fway = labelcount++;
+        write_on_buffer(f,"\tjmp .E%d\n",fway);
+        write_on_buffer(f,".E%d:\n",tway);
+        translate_body(f,SECONDCHILD(node),global,local);
+        write_on_buffer(f,"\tjmp .E%d\n.E%d:\n", temp, fway);
+        translate_body(f,FIRSTCHILD(node_else),global,local);
+        write_on_buffer(f,".E%d:\n", temp);
+    } else {
+        write_on_buffer(f,"\tjmp .E%d\n",fway);
+        write_on_buffer(f,".E%d:\n",tway);
+        translate_body(f,SECONDCHILD(node),global,local);
+        write_on_buffer(f,".E%d:\n", fway);
     }
-    write_on_buffer(f,".E%d:\n",tway);
-    translate_body(f,SECONDCHILD(node),global,local);
-    labelcount++;
+}
+
+static void write_while(FILE * f , Node *node,SymbolTable * global , SymbolTable * local){
+    int condway = labelcount++, tway = labelcount++, fway = labelcount++;
+    write_on_buffer(f, "\tjmp .E%d\n.E%d:\n", condway, tway);
+    translate_body(f, SECONDCHILD(node), global, local);
+    write_on_buffer(f, ".E%d:\n", condway);
+    write_bool_token(f, FIRSTCHILD(node), global, local, tway, fway);
+    write_on_buffer(f, ".E%d:\n", fway);
 }
 
 /**
@@ -433,29 +457,9 @@ static void translate_Expr_To_Asm(FILE * f, Node *node, SymbolTable *global, Sym
  * @param node The node representing the assignment operation.
  */
 static void write_assign_in_suite_instr(FILE *f, Node *node, SymbolTable *global, SymbolTable *local){
-    Symbol *sym;
     Sym_scope scope;
-    // Differencier les cas avec le scope
-    if (SECONDCHILD(node)->label == Ident){
-        sym = search_symbol(global, local, SECONDCHILD(node)->name, NULL, &scope);
-        if (scope == LOCAL){
-            write_on_buffer(f, "\tmov rax, qword [rbp - %d]\n", sym->reladdr);
-        } else if (scope == GLOBAL){
-            // Gerer le cas appel de fonction ici
-            write_on_buffer(f, "\tmov eax, dword [globals + %d]\n", sym->reladdr);
-        }
-    } else if (SECONDCHILD(node)->label == Num){
-        write_on_buffer(f, "\tmov rax, %d\n", SECONDCHILD(node)->val);
-    } else if (SECONDCHILD(node)->label == UnaryAddsub){
-        write_on_buffer(f, "\tmov rax, ");
-        write_on_buffer(f, "%s", SECONDCHILD(node)->name);
-        write_on_buffer(f, "%d\n", FIRSTCHILD(SECONDCHILD(node))->val);
-    } else if (SECONDCHILD(node)->label == Character){
-        write_on_buffer(f, "\tmov rax, %s\n", SECONDCHILD(node)->name);
-    } else if (isOperand(SECONDCHILD(node))){
-        translate_Expr_To_Asm(f, SECONDCHILD(node), global, local);
-        write_on_buffer(f, "\tpop rax\n");
-    }
+    Symbol *sym = NULL;
+    get_var_addr(f, SECONDCHILD(node), global, local);
     sym = search_symbol(global, local, FIRSTCHILD(node)->name, NULL, &scope);
     if (scope == LOCAL)
         write_on_buffer(f, "\tmov qword [rbp - %d], rax\n", sym->reladdr);
@@ -473,24 +477,7 @@ static void write_var_loc_declaration(FILE *f, Node *node, SymbolTable *global, 
                 write_on_buffer(f, "\tpush rax\n");
                 npush++;
             } else if (subChild->label == Assign){
-                if (SECONDCHILD(subChild)->label == Ident){
-                    // Gerer le cas appel de fonction ici
-                    sym = search_symbol(global, local, SECONDCHILD(subChild)->name, NULL, &scope);
-                    if (scope == GLOBAL){
-                        write_on_buffer(f, "\tmov eax, dword [globals + %d]\n", sym->reladdr);
-                    } else if (scope == LOCAL){
-                        write_on_buffer(f, "\tmov rax, qword [rbp - %d]\n", sym->reladdr);
-                    }
-                } else if (SECONDCHILD(subChild)->label == Num){
-                    write_on_buffer(f, "\tmov eax, %d\n", SECONDCHILD(subChild)->val);
-                } else if (SECONDCHILD(subChild)->label == UnaryAddsub){
-                    write_on_buffer(f, "\tmov eax, %s%d\n", SECONDCHILD(subChild)->name,
-                        SECONDCHILD(FIRSTCHILD(subChild))->val);
-                } else if (SECONDCHILD(subChild)->label == Character){
-                    write_on_buffer(f, "\tmov eax, %s\n", SECONDCHILD(subChild)->name);
-                } else if (isOperand(SECONDCHILD(subChild))){
-                    translate_Expr_To_Asm(f, SECONDCHILD(subChild), global, local);
-                }
+                get_var_addr(f, SECONDCHILD(subChild), global, local);
                 sym = search_symbol(global, local, FIRSTCHILD(subChild)->name, NULL, &scope);
                 if (scope == GLOBAL){
                     write_on_buffer(f, "\tmov dword [globals + %d], eax\n", sym->reladdr);
@@ -517,8 +504,13 @@ static void translate_body(FILE *f, Node *node, SymbolTable *global, SymbolTable
         }
         if (child->label == _if_){
             write_if(f, child, global, local);
-            write_on_buffer(f,".E%d:\n", finalfway);
-            continue;
+            if (hasElse){
+                hasElse = 0;
+                child = child->nextSibling;
+                continue;
+            } else {
+                continue;
+            }
         }
         if (child->label == Assign) {
             write_assign_in_suite_instr(f, child, global, local);
@@ -527,6 +519,10 @@ static void translate_body(FILE *f, Node *node, SymbolTable *global, SymbolTable
         if (node->label == SuiteInstr && child->label == Ident){
             // Must be function call
             write_function_call(f, child, global, local);
+            continue;
+        }
+        if (child->label == _while_){
+            write_while(f, child, global, local);
             continue;
         }
         if (child->label == _return_){

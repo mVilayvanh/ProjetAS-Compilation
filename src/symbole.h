@@ -60,13 +60,16 @@
  calling '%s' while not a function.\n" 
 
 #define ERR_VOID_TYPE_AS_ARGUMENT "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
- calling '%s' is a function returning void. It cannot be given as an argument.\n" 
+ '%s' is a function returning void. It cannot be given as an argument.\n" 
 
 #define ERR_VOID_TYPE_AS_OPERAND "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
- calling '%s' is a function returning void. It cannot be used as an operand.\n" 
+ '%s' is a function returning void. It cannot be used as an operand.\n" 
+
+#define ERR_VOID_TYPE_AS_ASSIGNEMENT "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
+ '%s' is a function returning void. It cannot be assigned to any variable.\n"
 
 #define ERR_VOID_TYPE_AS_RETVAL "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
- calling '%s' is a function returning void. It cannot be used as return value.\n" 
+ '%s' is a function returning void. It cannot be used as return value.\n" 
 
 extern int err_flag;
 
@@ -94,6 +97,7 @@ typedef enum err_c {
     VOID_TYPE_ARGUMENT,
     VOID_TYPE_AS_OPERAND,
     VOID_TYPE_AS_RETVAL,
+    VOID_TYPE_AS_ASSIGNEMENT,
     NO_ERR
 } Err_c;
 
