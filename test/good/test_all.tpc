@@ -37,7 +37,7 @@ int main(void){
     char ii = '1';
     char j, k = !('a');
     char l = 'a', m = 'b';
-    char n = 97;
+    char n ;
 
     n = 'a';
     ezzz = 'a';
@@ -63,13 +63,13 @@ int main(void){
 
     {a = b;}
 
-    toto('a', 97);
+    toto(97,'a');
 
     main();
 
     g = getint();
 
-    toto (a,a);
+    toto (foo(),'a');
 
     return 0;
 }
@@ -77,4 +77,5 @@ int main(void){
 
 int foo2(int foo){
     foo = main();
+    return 0;
 }

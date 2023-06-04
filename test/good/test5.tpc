@@ -1,21 +1,24 @@
+int q ;
 
 void abc(int a , int b){
     return;
 }
+// segfault
+int truc(void) {
+    // ici quand je mets un valeur a un return 
+    return q + 2;
+}
 
 int main(int a, int b, char c) {
+    
     while (b != 0) {
         if (a > b) {
             a = a - b;
             if (1);
-        }
-        else
+        }else{
             b = b - a;
+        }
     }
-    return b;
     abc(c, q);
-}
-
-int truc(void) {
-    return;
+    return b;
 }

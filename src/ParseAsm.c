@@ -5,7 +5,6 @@ int labelcount = 0;
 int hasElse = 0;
 int npush = 0;
 char buffer[BUFFERSIZE] = "";
-char *funcName = NULL;
 
 static void write_if(FILE * f , Node *node,SymbolTable * global , SymbolTable * local);
 static void write_function_call(FILE *f, Node *node, SymbolTable *global, SymbolTable *local);
@@ -36,13 +35,51 @@ static void write_on_buffer(FILE *f, char *suffix, ...){
     strcat(buffer, tmp);
 }
 
-static void get_var_addr(FILE *f, Node *node, SymbolTable *global, SymbolTable *local){
+static void write_start(FILE *f, SymbolTable *table){
+    int i, nparam = table->nparam, align = 0;
+    write_on_buffer(f, "_start:\n\tmov rbp, rsp\n");
+    if (nparam % 2 != 0){
+        write_on_buffer(f, "\tsub rsp, 8\n");
+        align = 1;
+    }
+    for (i = 0; i < nparam; i++){
+        write_on_buffer(f, "\tpush rax\n");
+        npush++;
+    }
+    write_on_buffer(f, "\tcall main\n");
+    while (nparam > 0){
+        write_on_buffer(f, "\tpop rcx\n");
+        nparam--;
+    }
+    if (align){
+        write_on_buffer(f, "\tadd rsp, 8\n");
+    }
+    write_on_buffer(f, "\tmov rdi, rax\n\tmov rax, 60\n\tsyscall\n");
+}
+
+
+static int rel_addr_pushed_paramter(int paramno){
+    // + 8 since push rbp at start
+    return paramno * 8 + 8;
+}
+
+static void read_parameter(FILE *f, int paramno){
+    write_on_buffer(f, "\tmov rax, qword [rbp + %d]\n", 
+        rel_addr_pushed_paramter(paramno));
+}
+
+static void evaluate_token(FILE *f, Node *node, SymbolTable *global, SymbolTable *local){
     Symbol *sym;
+    int index;
     Sym_scope scope;
     if (node->label == Ident){
-        sym = search_symbol(global, local, node->name, NULL, &scope);
+        sym = search_symbol(global, local, node->name, &index, &scope);
         if (scope == LOCAL){
-            write_on_buffer(f, "\tmov rax, qword [rbp - %d]\n", sym->reladdr);
+            if (index < local->nparam){
+                read_parameter(f, index + 1);
+            } else {
+                write_on_buffer(f, "\tmov rax, qword [rbp - %d]\n", sym->reladdr);
+            }
         } else if (scope == GLOBAL){
             if (sym->table){
                 write_function_call(f, node, global, local);
@@ -62,6 +99,12 @@ static void get_var_addr(FILE *f, Node *node, SymbolTable *global, SymbolTable *
         translate_Expr_To_Asm(f, node, global, local);
         write_on_buffer(f, "\tpop rax\n");
         npush--;
+    } else if (isConditionalOperator(node)){
+        int tway = labelcount++, fway = labelcount++, after = labelcount++;
+        write_bool_token(f, node, global, local, tway, fway);
+        write_on_buffer(f, "\tjmp .E%d\n.E%d:\n", fway, tway);
+        write_on_buffer(f, "\tmov rax, 1\n\tjmp .E%d\n", after);
+        write_on_buffer(f, ".E%d:\n\tmov rax, 0\n.E%d:\n", fway, after);
     }
 }
 
@@ -77,7 +120,24 @@ static void write_global_var_area(FILE *f, SymbolTable *global){
         return;
     }
     write_on_buffer(f, "section .bss\n");
-    write_on_buffer(f, "globals: resd %d\n", global->nparam);
+    write_on_buffer(f, "\tglobals: resd %d\n", global->nparam);
+    write_on_buffer(f, "\tdigit: resb 1\n\tnumber: resd 1\n\tBUFFER: resb 10\n");
+}
+
+static void getint_asm(FILE * f){
+    write_on_buffer(f, GETINTFUNC);
+}
+
+static void getchar_asm(FILE *f){
+    write_on_buffer(f, GETCHARFUNC);
+}
+
+static void putchar_asm(FILE *f){
+    write_on_buffer(f, PUTCHARFUNC);
+}
+
+static void putint_asm(FILE *f){
+    write_on_buffer(f, PUTINTFUNC);
 }
 
 /**
@@ -102,6 +162,10 @@ static void write_init(FILE * f, SymbolTable * global){
             }
         }
     }
+    getint_asm(f);
+    getchar_asm(f);
+    putint_asm(f);
+    putchar_asm(f);
 }
 
 /**
@@ -111,13 +175,13 @@ static void write_init(FILE * f, SymbolTable * global){
  */
 static void write_return(FILE * f, Node *node, SymbolTable *global, SymbolTable *local){
     if (node){
-        get_var_addr(f, node, global, local);
+        evaluate_token(f, node, global, local);
     }
-    if (strcmp(funcName, "main") == 0){
-        write_on_buffer(f, "\tmov rdi, rax\n\tmov rax, 60\n\tsyscall\n");
-    } else {
-        write_on_buffer(f, "\tmov rsp, rbp\n\tpop rbp\n\tret\n");
+    int i;
+    for (i = 0; i < npush; i++){
+        write_on_buffer(f, "\tpop rcx\n");
     }
+    write_on_buffer(f, "\tmov rsp, rbp\n\tpop rbp\n\tret\n");
 }
 
 /**
@@ -129,6 +193,7 @@ static void write_return(FILE * f, Node *node, SymbolTable *global, SymbolTable 
 static void write_leaf(FILE *f, Node *leaf, SymbolTable *global, SymbolTable *local){
     Symbol *sym;
     Sym_scope scope;
+    int index;
     switch(leaf->label) {
         case Num:
             write_on_buffer(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->val);
@@ -138,9 +203,13 @@ static void write_leaf(FILE *f, Node *leaf, SymbolTable *global, SymbolTable *lo
             write_on_buffer(f, "\t; Add Leaf\n\tmov eax, %d\n\tpush rax\n", leaf->name[1] - 0);
             break;
         case Ident:
-            sym = search_symbol(global, local, leaf->name, NULL, &scope);
+            sym = search_symbol(global, local, leaf->name, &index, &scope);
             if (scope == LOCAL){
-                write_on_buffer(f, "\tmov rax, qword [rbp - %d]\n", sym->reladdr);
+                if (index < local->nparam){
+                    read_parameter(f, index + 1);
+                } else {
+                    write_on_buffer(f, "\tmov rax, qword [rbp - %d]\n", sym->reladdr);
+                }
                 write_on_buffer(f, "\tpush rax\n");
             } else if (scope == GLOBAL){
                 // If has a sym table, it means it is a function
@@ -194,74 +263,38 @@ static void write_divstar(FILE * f, Node *node){
     npush--;
 }
 
-static void write_parameter(FILE *f, Node *node, SymbolTable *global, SymbolTable *local, int paramno){
-    get_var_addr(f, node, global, local);
-    switch (paramno){
-    case 1:
-        write_on_buffer(f, "\tmov rdi, rax\n");
-        break;
-    case 2:
-        write_on_buffer(f, "\tmov rsi, rax\n");
-        break;
-    case 3:
-        write_on_buffer(f, "\tmov rdx, rax\n");
-        break;
-    case 4:
-        write_on_buffer(f, "\tmov rcx, rax\n");
-        break;
-    case 5:
-        write_on_buffer(f, "\tmov r8, rax\n");
-        break;
-    case 6:
-        write_on_buffer(f, "\tmov r9, rax\n");
-        break;
-    default:
-        write_on_buffer(f, "\tpush rax\n");
-        npush++;
-        break;
-    }
+static void write_parameter(FILE *f, Node *node, SymbolTable *global, SymbolTable *local){
+    evaluate_token(f, node, global, local);
+    write_on_buffer(f, "\tpush rax\n");
+    //npush++;
 }
 
 static void write_function_call(FILE *f, Node *node, SymbolTable *global, SymbolTable *local){
-    int paramno = 0, i = 0;
+    Symbol *sym = search_symbol(global, local, node->name, NULL, NULL);
+    SymbolTable *table = (SymbolTable *)sym->table;
+    // Retrieve parameter number of called function
+    int nparam = table->nparam, align = 0;
     Node *parameter = FIRSTCHILD(FIRSTCHILD(node));
-    // According to C standard, no more than 127 arguments can be given
-    Node *todo[128];
-    // Has at least one non void parameter
-    if (parameter->label != Type){
-        paramno = 1;
-        for (; parameter != NULL; parameter = NEXTSIBLING(parameter)){
-            if (paramno < 7){
-                write_parameter(f, parameter, global, local, paramno);
-                paramno++;
-            } else {
-                todo[i] = parameter;
-                i++;
-                paramno++;
-            }
-        }
-        // If there is over 6 parameters, push them
-        if (paramno > 6){
-            for (i = i - 1; i >= 0; i--){
-                write_parameter(f, todo[i], global, local, paramno);
-            }
-        }
-    }
-    // Case alignement is required
-    if (npush % 2 != 0){
+    if ((nparam + npush) % 2 != 0){
         // Align stack
         write_on_buffer(f, "\tsub rsp, 8\n");
-        write_on_buffer(f, "\tcall %s\n", node->name);
-        // Restore stack
-        write_on_buffer(f, "\tadd rsp, 8\n");
-    } else {
-        write_on_buffer(f, "\tcall %s\n", node->name);
+        align = 1;
     }
-    // Restore stack in case parameters has been pushed
-    while (paramno - 1 > 6){
+    // Has at least one non void parameter
+    if (parameter->label != Type){
+        for (; parameter != NULL; parameter = NEXTSIBLING(parameter)){
+            write_parameter(f, parameter, global, local);
+        }
+    }
+    write_on_buffer(f, "\tcall %s\n", node->name);
+    // Restore stack after parameters has been pushed
+    while (nparam > 0){
         write_on_buffer(f, "\tpop rcx\n");
-        paramno--;
-        npush--;
+        nparam--;
+    }
+    // Restore stack if alignement has been made
+    if (align){
+        write_on_buffer(f, "\tadd rsp, 8\n");
     }
 }
 
@@ -272,9 +305,9 @@ static void write_function_call(FILE *f, Node *node, SymbolTable *global, Symbol
  * @param node The node representing the order comparison operation.
  */
 static void write_order(FILE * f , Node * node, SymbolTable *global, SymbolTable *local,int tway , int fway){
-    get_var_addr(f,FIRSTCHILD(node),global,local);
+    evaluate_token(f,FIRSTCHILD(node),global,local);
     write_on_buffer(f,"\tpush rax\n");
-    get_var_addr(f,SECONDCHILD(node),global,local);
+    evaluate_token(f,SECONDCHILD(node),global,local);
     write_on_buffer(f,"\tpush rax\n");
     write_on_buffer(f,"\tpop rcx\n\tpop rax\n");
     if (strcmp(node->name ,"<") == 0 ){
@@ -309,9 +342,9 @@ static void write_or(FILE * f , Node *node, SymbolTable * global , SymbolTable *
  * @param node The node representing the equality comparison operation.
  */
 static void write_eq(FILE * f , Node * node, SymbolTable *global, SymbolTable *local , int tway , int fway){
-    get_var_addr(f,FIRSTCHILD(node),global,local);
+    evaluate_token(f,FIRSTCHILD(node),global,local);
     write_on_buffer(f,"\tpush rax\n");
-    get_var_addr(f,SECONDCHILD(node),global,local);
+    evaluate_token(f,SECONDCHILD(node),global,local);
     write_on_buffer(f,"\tpush rax\n");
     write_on_buffer(f,"\tpop rcx\n\tpop rax\n");
     if (strcmp(node->name ,"==") == 0 ){
@@ -365,7 +398,7 @@ static void write_bool_token(FILE *f, Node *node, SymbolTable *global, SymbolTab
             write_or(f, node,global,local,tway,fway);
             break;
         default:
-            get_var_addr(f, node, global, local);
+            evaluate_token(f, node, global, local);
             write_on_buffer(f, "\tcmp rax, 0\n");
             write_on_buffer(f, "\tjne .E%d\n", tway);
             break;
@@ -376,7 +409,11 @@ static void write_if(FILE * f , Node *node,SymbolTable * global , SymbolTable * 
     int tway = labelcount++;
     int fway = labelcount++;
     int temp = fway;
+    if(!SECONDCHILD(node)){
+        return;
+    }
     write_bool_token(f,FIRSTCHILD(node),global,local,tway,fway);
+
     Node * node_else  = node->nextSibling;
     // Translation of if statement
     // Translation of else statement if exists
@@ -389,7 +426,7 @@ static void write_if(FILE * f , Node *node,SymbolTable * global , SymbolTable * 
         write_on_buffer(f,"\tjmp .E%d\n.E%d:\n", temp, fway);
         translate_body(f,FIRSTCHILD(node_else),global,local);
         write_on_buffer(f,".E%d:\n", temp);
-    } else {
+        } else {
         write_on_buffer(f,"\tjmp .E%d\n",fway);
         write_on_buffer(f,".E%d:\n",tway);
         translate_body(f,SECONDCHILD(node),global,local);
@@ -435,7 +472,8 @@ static void translate_Expr_To_Asm(FILE * f, Node *node, SymbolTable *global, Sym
             write_expr(f, node, global, local);
         } else {
             // Fix this case later
-            if (node->label == Ident || node->label == Character || node->label == Num){
+            if (node->label == Ident || node->label == Character || 
+                node->label == Eq || node->label == Order || node->label == Num){
                 write_expr(f, node, global, local);
                 return;
             }
@@ -459,7 +497,7 @@ static void translate_Expr_To_Asm(FILE * f, Node *node, SymbolTable *global, Sym
 static void write_assign_in_suite_instr(FILE *f, Node *node, SymbolTable *global, SymbolTable *local){
     Sym_scope scope;
     Symbol *sym = NULL;
-    get_var_addr(f, SECONDCHILD(node), global, local);
+    evaluate_token(f, SECONDCHILD(node), global, local);
     sym = search_symbol(global, local, FIRSTCHILD(node)->name, NULL, &scope);
     if (scope == LOCAL)
         write_on_buffer(f, "\tmov qword [rbp - %d], rax\n", sym->reladdr);
@@ -477,7 +515,7 @@ static void write_var_loc_declaration(FILE *f, Node *node, SymbolTable *global, 
                 write_on_buffer(f, "\tpush rax\n");
                 npush++;
             } else if (subChild->label == Assign){
-                get_var_addr(f, SECONDCHILD(subChild), global, local);
+                evaluate_token(f, SECONDCHILD(subChild), global, local);
                 sym = search_symbol(global, local, FIRSTCHILD(subChild)->name, NULL, &scope);
                 if (scope == GLOBAL){
                     write_on_buffer(f, "\tmov dword [globals + %d], eax\n", sym->reladdr);
@@ -506,12 +544,14 @@ static void translate_body(FILE *f, Node *node, SymbolTable *global, SymbolTable
             write_if(f, child, global, local);
             if (hasElse){
                 hasElse = 0;
-                child = child->nextSibling;
+                if(child->nextSibling)
+                    child = child->nextSibling;
                 continue;
             } else {
                 continue;
             }
         }
+
         if (child->label == Assign) {
             write_assign_in_suite_instr(f, child, global, local);
             continue;
@@ -530,6 +570,7 @@ static void translate_body(FILE *f, Node *node, SymbolTable *global, SymbolTable
             write_return(f, FIRSTCHILD(child), global, local);
             continue;
         }
+
         translate_body(f, child, global, local);
     } 
 }
@@ -541,6 +582,19 @@ static Node *move_to_body(const Node *node){
     return NULL;
 }
 
+static int is_put_get_function(char *name){
+    if (strcmp(name, "getchar") == 0){
+        return 1;
+    } else if (strcmp(name, "putchar") == 0){
+        return 1;
+    } else if (strcmp(name, "putint") == 0){
+        return 1;
+    } else if (strcmp(name, "getint") == 0){
+        return 1;
+    }
+    return 0;
+}
+
 /**
  * Generates an assembly file based on the given symbol table and node.
  *
@@ -549,30 +603,34 @@ static Node *move_to_body(const Node *node){
  */
 void write_Asm(SymbolTable * global){
     Node *body = NULL;
-    SymbolTable *local = NULL;
+    SymbolTable *local = NULL, *mainlocal = NULL;
     // A retirer. Entrer dans write asm uniquement si aucune erreur sem
     FILE * f = fopen("ano.asm", "w");
     write_init(f, global);
     for (int i = 0; i < global->size; i++){
         if(global->symbols[i].table != NULL){
             local = (SymbolTable *)global->symbols[i].table;
-            body = global->symbols[i].funcNode;
-            funcName = global->symbols[i].name;
-            move_to_body(body);
-            if (strcmp("main", funcName) == 0){
-                write_on_buffer(f, "_start:\n\tmov rbp, rsp\n");
-            } else {
-                write_on_buffer(f, "%s:\n", global->symbols[i].name);
+            if (strcmp(global->symbols[i].name, "main") == 0){
+                mainlocal = local;
             }
-            
-            if (body){
-                translate_body(f, body, global, local);
-            } 
-            if (global->symbols[i].type == VOID_TYPE){
-                write_on_buffer(f, "\tret\n");
+            if (!is_put_get_function(global->symbols[i].name)){
+                body = global->symbols[i].funcNode;
+                move_to_body(body);
+                write_on_buffer(f, "%s:\n", global->symbols[i].name);
+                write_on_buffer(f, "\tpush rbp\n\tmov rbp, rsp\n");
+                //npush++;
+                if (body){
+                    translate_body(f, body, global, local);
+                }
+                if (global->symbols[i].type == VOID_TYPE){
+                    write_return(f, NULL, global, local);
+                }
+                // reset push number for next function
+                npush = 0;
             }
         }
     }
+    write_start(f, mainlocal);
     fprintf(f, "%s", buffer);
     fclose(f);
 }

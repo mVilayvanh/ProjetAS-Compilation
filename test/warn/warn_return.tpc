@@ -1,0 +1,16 @@
+int a;
+int b, c;
+
+
+char foo(void){
+    int a ;
+    return 97;// mauvais print ç'est un avertissement
+}
+
+int main(void){
+    int a = 1;
+    char b = 'a';
+    char f = 1;
+    int c = 'c';
+    return f ;
+}

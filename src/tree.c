@@ -78,7 +78,7 @@ void searchNode(Node *from, label_t target, Node **res) {
     }
 }
 
-int isOrderOrEqual(Node *node){
+int isConditionalOperator(Node *node){
     return node->label == Order
         || node->label == Eq;
 }

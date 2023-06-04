@@ -1,14 +1,14 @@
 int a, b;
-
+//  var global identique var locale
 char c, d;
 
 void foo(void){
     int a = -5, b = +6, e = 8;
 }
 
-char main(int p){
+int main(int p){
     char b;
     int a, e = 1;
-    return;
+    return 1 ;
 }
 

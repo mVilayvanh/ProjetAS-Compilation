@@ -41,11 +41,8 @@
 #define ERR_FUNC_ARG_NUMBER "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
  wrong number arguments to function '%s'.\n" 
 
-#define WARN_CHAR_ASSIGNEMENT "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
- '%s' is a char type but assignement is an int type .\n"            
-
-#define WARN_EXPECTING_CHAR "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
- giving int type as argument to a function expecting char type.\n" 
+#define WARN_CHAR_EXPECTED "\033[1;35mWarning\033[0m \033[1;36ml:%d\033[0m:\
+ giving an int type token while expecting it to be a char\n"            
 
 #define ERR_MISSING_RET_TOKEN "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
  Current function is missing a return and doesnt return void type.\n"
@@ -60,7 +57,7 @@
  calling '%s' while not a function.\n" 
 
 #define ERR_VOID_TYPE_AS_ARGUMENT "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
- '%s' is a function returning void. It cannot be given as an argument.\n" 
+ void type token cannot be given as an argument.\n" 
 
 #define ERR_VOID_TYPE_AS_OPERAND "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
  '%s' is a function returning void. It cannot be used as an operand.\n" 
@@ -69,7 +66,7 @@
  '%s' is a function returning void. It cannot be assigned to any variable.\n"
 
 #define ERR_VOID_TYPE_AS_RETVAL "\033[1;31mError\033[0m \033[1;36ml:%d\033[0m:\
- '%s' is a function returning void. It cannot be used as return value.\n" 
+ '%s' is a function returning void. It cannot be used as return value.\n" \
 
 extern int err_flag;
 
@@ -89,7 +86,6 @@ typedef enum err_c {
     FUNC_NAME_USED,
     FUNC_WRONG_USAGE,
     VAR_AS_FUNC_CALL,
-    CHAR_ASSIGNEMENT,
     CHAR_EXPECTED,
     RETURN_TOKEN_MISSING,
     NO_MAIN,

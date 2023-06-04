@@ -2,7 +2,10 @@ int b;
 char hello;
 
 int main(void) {
-   int a = 10;
+    int oui = 50;
+    int a = +10;
+    int test = 40;
+    int res;
     if ((test == 40) && (oui == 50) || (res == 2)) {
         return test;
     }

@@ -1,0 +1,17 @@
+int a;
+int b, c;
+char d;
+char test;
+
+char foo(char v){
+    return b;
+}
+
+int main(void){
+    int a = 1;
+    char b = 'a';
+    char f = 1;
+    int c = 'c';
+    foo(a);
+    return b;
+}

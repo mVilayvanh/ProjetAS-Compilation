@@ -7,5 +7,6 @@ int main(void){
     int b = 2;
     int c = toto(a,b);
     toto(1);
+    a = 1 == 2 + a;
     return 0;
 }

@@ -49,11 +49,8 @@ int is_empty_table(const SymbolTable *table){
 
 static void print_warn(Err_c  code , Node * node , ...){
     switch (code){
-        case CHAR_ASSIGNEMENT:
-            fprintf(stderr, WARN_CHAR_ASSIGNEMENT, node->lineno, node->name);
-            break;
         case CHAR_EXPECTED:
-            fprintf(stderr, WARN_EXPECTING_CHAR, node->lineno);
+            fprintf(stderr, WARN_CHAR_EXPECTED, node->lineno);
             break;
         default:
             break;
@@ -98,7 +95,7 @@ static void raise_sem_err(Err_c code, Node *node) {
             fprintf(stderr, ERR_RET_VALUE_MISMATCH, node->lineno);
             break;
         case VOID_TYPE_ARGUMENT:
-            fprintf(stderr, ERR_VOID_TYPE_AS_ARGUMENT, node->lineno, node->name);
+            fprintf(stderr, ERR_VOID_TYPE_AS_ARGUMENT, node->lineno);
             break;
         case VOID_TYPE_AS_OPERAND:
             fprintf(stderr, ERR_VOID_TYPE_AS_OPERAND, node->lineno, node->name);
@@ -261,7 +258,6 @@ static int check_argument(SymbolTable *global, SymbolTable *local, SymbolTable *
             if (tmp && tmp->funcNode) {
                 err = check_argument(global, local, tmp->table, child, nb_param_of_function(global, tmp->name));
                 if (err){
-                    // Jsp pour l'instant printf("err recursive\n");
                     retval = 1;
                 }
             }
@@ -301,7 +297,7 @@ static int check_argument(SymbolTable *global, SymbolTable *local, SymbolTable *
 static Types select_correct_type(SymbolTable *global, SymbolTable *local , Node *node){
     Types res = UNDEFINED;
     Symbol *tmp;
-    int err;
+    int err = 0;
     switch (node->label){
     case Num:
         res = INT_TYPE;
@@ -315,32 +311,20 @@ static Types select_correct_type(SymbolTable *global, SymbolTable *local , Node 
             res = tmp->type;
         }
         else if (tmp && tmp->funcNode != NULL){
-            if(check_argument(global, local, tmp->table, node, nb_param_of_function(global, node->name)) == 0)
-                res = tmp->type;
-            else
-                res = UNDEFINED;
-        }else {
-            res = UNDEFINED;
-        }
-        break;
-
-    case Addsub:
-        checking_operand_format(global, local, node, &err);
-        if (err){
-            res = UNDEFINED;
+            check_argument(global, local, tmp->table, node, nb_param_of_function(global, node->name));
+            res = tmp->type;
         } else {
-            res = INT_TYPE;
-        }
-        break;
-    case Divstar:
-        checking_operand_format(global, local, node, &err);
-        if (err){
             res = UNDEFINED;
-        } else {
-            res = INT_TYPE;
         }
         break;
     default:
+        // Is boolean or addsub/divstar statement
+        checking_operand_format(global, local, node, &err);
+        if (err){
+            res = UNDEFINED;
+        } else {
+            res = INT_TYPE;
+        }
         break;
     }
     return res;
@@ -371,7 +355,7 @@ static int add_variable(SymbolTable *global, SymbolTable *local, Node *node){
                 } 
                 if (type2 == INT_TYPE && type == CHAR_TYPE && !voidOperand){
                     // Case assignement to int variable with a char type value
-                    print_warn(CHAR_ASSIGNEMENT, FIRSTCHILD(subChild));
+                    print_warn(CHAR_EXPECTED, FIRSTCHILD(subChild));
                 } else {
                     voidOperand = 0;
                 }            
@@ -576,6 +560,7 @@ void print_symbol_table(const SymbolTable *table){
 static Err_c matching_return_value(Types retval, Node *node,
     SymbolTable *global, SymbolTable *local, Types *err){
     Symbol *tmp;
+    int tmperr = 0;
     // Case no retval and there is a value on return token
     if (retval == VOID_TYPE) {
         if (FIRSTCHILD(node)){
@@ -603,6 +588,11 @@ static Err_c matching_return_value(Types retval, Node *node,
                 if (tmp->type == VOID_TYPE){
                     return VOID_TYPE_AS_RETVAL;
                 }
+            } else if (isOperand(FIRSTCHILD(node)) || isConditionalOperator(FIRSTCHILD(node))){
+                checking_operand_format(global, local, FIRSTCHILD(node), &tmperr);
+                if (tmperr){
+                    return RET_WITH_NO_VALUE;
+                }
             }
             // Char type indent are accepted
             return NO_ERR;
@@ -614,7 +604,7 @@ static Err_c matching_return_value(Types retval, Node *node,
         if (FIRSTCHILD(node)){
             if (FIRSTCHILD(node)->label == Num){
                 *err = INT_TYPE;
-                return CHAR_ASSIGNEMENT;
+                return CHAR_EXPECTED;
             } else if (FIRSTCHILD(node)->label == Ident){
                 tmp = search_symbol(global, local, FIRSTCHILD(node)->name, NULL, NULL);
                 if (tmp){
@@ -627,7 +617,7 @@ static Err_c matching_return_value(Types retval, Node *node,
                 }
                 if (*err == INT_TYPE){
                     *err = INT_TYPE;
-                    return CHAR_ASSIGNEMENT;
+                    return CHAR_EXPECTED;
                 } else {
                     return NO_ERR;
                 }
@@ -693,7 +683,7 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
                     if (type2 == UNDEFINED && SECONDCHILD(node)->label == Ident){
                         raise_sem_err(UNDECLARED, SECONDCHILD(node));
                     } else if (type1 == CHAR_TYPE && type2 == INT_TYPE){
-                        print_warn(CHAR_ASSIGNEMENT, FIRSTCHILD(node));
+                        print_warn(CHAR_EXPECTED, FIRSTCHILD(node));
                     }
                 }
             }
@@ -711,22 +701,22 @@ static void sem_error_checking(SymbolTable *global, SymbolTable *local, Node *no
             raise_sem_err(err, FIRSTCHILD(node));
         } else if (err == RET_WITH_VALUE) {
             raise_sem_err(err, node);
+        } else if (err == CHAR_EXPECTED) {
+            print_warn(CHAR_EXPECTED, FIRSTCHILD(node));
         } else if (err != NO_ERR) {
             raise_sem_err(err, node);
         }
-        if (err == NO_ERR || (err == RET_WITH_NO_VALUE && funcRetType == VOID_TYPE) || err == RET_WITH_VALUE) {
-            hasReturn = 1;
-        }
+        hasReturn = 1;
     }
     // If token cannot take expression of void type such as function returning void
-    if (node->label == _if_){
+    if (node->label == _if_ || node->label == _while_){
         if (FIRSTCHILD(node)->label == Ident){
             if (select_correct_type(global, local, FIRSTCHILD(node)) == VOID_TYPE){
-                raise_sem_err(UNDECLARED, FIRSTCHILD(node));
+                raise_sem_err(VOID_TYPE_AS_OPERAND, FIRSTCHILD(node));
             }
         }
     }
-    if (isOperand(node)){
+    if (isOperand(node) || isConditionalOperator(node)){
         checking_operand_format(global, local, node, NULL);
     }
 }
